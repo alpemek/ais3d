@@ -1,7 +1,8 @@
 '''
 University of Freiburg - Laboratory, Deep Learning for Autonomous Driving
 Project 2- Exercise 2
-Alp Emek & Marcelo Chulek
+Alp Emek
+Marcelo Chulek
 
 The code is converted to python from the matlab code provided in the dataset.
 16.5.2018
