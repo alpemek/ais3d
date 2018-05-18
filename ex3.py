@@ -23,7 +23,9 @@ import numpy as np
 import os.path
 
 
-
+factorx=4
+factory=2
+factorz=2
 root_dir="/home/dllab/kitti_object/data_object_image_2"
 data_set = "training"
 
@@ -67,16 +69,16 @@ class Object3d(object):
     self.alpha = data[3] # object observation angle [-pi..pi]
 
     # extract 2d bounding box in 0-based coordinates
-    self.xmin = int(data[4]) # left
-    self.ymin = int(data[5]) # top
-    self.xmax = int(data[6]) # right
-    self.ymax = int(data[7]) # bottom
+    self.xmin = int(data[4])/factorx # left
+    self.ymin = int(data[5])/factory # top
+    self.xmax = int(data[6])/factorx # right
+    self.ymax = int(data[7])/factory # bottom
     self.box2d = np.array([self.xmin,self.ymin,self.xmax,self.ymax])
 
     # extract 3d bounding box information
-    self.h = data[8] # box height
-    self.w = data[9] # box width
-    self.l = data[10] # box length (in meters)
+    self.h = data[8]/factory # box height
+    self.w = data[9]/factorx # box width
+    self.l = data[10]/factorz  # box length (in meters)
     self.t = (data[11],data[12],data[13]) # location (x,y,z) in camera coord.
     self.ry = data[14] # yaw angle (around Y-axis in camera coordinates) [-pi..pi]
 
@@ -104,16 +106,18 @@ objects = readLabels(label_dir,img_idx);
 #Show image
 
 image = cv2.imread(image_dir, 1)
+
+small = cv2.resize(image, (0,0), fx=1.0/factorx, fy=1.0/factory)
 #image = np.zeros((512,512,3), np.uint8)
 #cv2.imshow("test image", image)
 #cv2.rectangle(image,(384,0),(510,128),(0,255,0),30)
 #cv2.imshow("test image", image)
 #plot rect for every box
 for objind in range(len(objects)):
-  drawBox2D(image,objects[objind]);
+  drawBox2D(small,objects[objind]);
   #[corners,face_idx] = computeBox3D(objects(obj_idx),P);
   #orientation = computeOrientation3D(objects(obj_idx),P);
   #drawBox3D(h, objects(obj_idx),corners,face_idx,orientation);
-cv2.imshow("test image", image)
+cv2.imshow("test image", small)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
