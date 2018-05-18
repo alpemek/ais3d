@@ -69,10 +69,10 @@ class Object3d(object):
     self.alpha = data[3] # object observation angle [-pi..pi]
 
     # extract 2d bounding box in 0-based coordinates
-    self.xmin = int(data[4])/factorx # left
-    self.ymin = int(data[5])/factory # top
-    self.xmax = int(data[6])/factorx # right
-    self.ymax = int(data[7])/factory # bottom
+    self.xmin = int(data[4]/factorx) # left
+    self.ymin = int(data[5]/factory) # top
+    self.xmax = int(data[6]/factorx) # right
+    self.ymax = int(data[7]/factory) # bottom
     self.box2d = np.array([self.xmin,self.ymin,self.xmax,self.ymax])
 
     # extract 3d bounding box information
