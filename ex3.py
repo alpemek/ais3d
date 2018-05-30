@@ -22,10 +22,10 @@ import cv2
 import numpy as np
 import os.path
 
-
-factorx=4
-factory=2
-factorz=2
+#keep aspect ration
+factorx=3
+factory=3
+factorz=3
 root_dir="/home/dllab/kitti_object/data_object_image_2"
 data_set = "training"
 
@@ -98,7 +98,7 @@ def drawBox2D(img,obj):
   #cv2.rectangle(img,(384,0),(510,128),(0,255,0),30)
 
 
-img_idx=2; # Index of the image to be shown
+img_idx=3; # Index of the image to be shown
 image_dir = "{}/{:06d}.png".format(images_dir,img_idx);
 P = readCalibration(calib_dir,img_idx,cam);
 objects = readLabels(label_dir,img_idx);

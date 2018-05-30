@@ -28,7 +28,7 @@ def cv2_demo(net, transform):
         scale = torch.Tensor([width, height, width, height])
         for i in range(detections.size(1)):
             j = 0
-            while detections[0, i, j, 0] >= 0.6:
+            while detections[0, i, j, 0] >= 0.4:
                 pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
                 cv2.rectangle(frame,
                               (int(pt[0]), int(pt[1])),

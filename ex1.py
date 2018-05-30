@@ -6,22 +6,28 @@ Created on Mon Apr 30 17:54:54 2018
 #INCLUDING LIBRARIES
 from __future__ import print_function
 import torch
+
 import torch.nn as nn
+import torch.cuda as torchcuda
+
+device = torchcuda.current_device()
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 torch.manual_seed(1)
 import matplotlib.pyplot as plt
-device = torch.device("cuda")
+#device = torch.device("cuda")
+
+
 #SOME GENERAL HYPERPARAMETERS
 num_train_epochs = 20;
 lr=0.01
 momentum=0.5
 #LOADING THE DATA
 transform1=transforms.Compose([transforms.Resize((32,32)),transforms.ToTensor(),transforms.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])]);
-train_loader=torch.utils.data.DataLoader(datasets.ImageFolder('./GTSRB/Training', transform=transform1),batch_size=64, shuffle=True, pin_memory=True)
-validate_loader=torch.utils.data.DataLoader(datasets.ImageFolder('./GTSRB/Validation',transform=transform1),batch_size=1, shuffle=True, pin_memory=True)
-test_loader=torch.utils.data.DataLoader(datasets.ImageFolder('./GTSRB/Testing',transform=transform1),batch_size=1, shuffle=True, pin_memory=True)
+train_loader=torch.utils.data.DataLoader(datasets.ImageFolder('/home/chulekm/AutonomousDriving/Exercise 1/GTSRB/Training', transform=transform1),batch_size=64, shuffle=True, pin_memory=True)
+validate_loader=torch.utils.data.DataLoader(datasets.ImageFolder('/home/chulekm/AutonomousDriving/Exercise 1/GTSRB/Validation',transform=transform1),batch_size=1, shuffle=True, pin_memory=True)
+test_loader=torch.utils.data.DataLoader(datasets.ImageFolder('/home/chulekm/AutonomousDriving/Exercise 1/GTSRB/Testing',transform=transform1),batch_size=1, shuffle=True, pin_memory=True)
 #CLASS SIMILAR TO VGG16
 class Vgg16(nn.Module):
     def __init__(self, num_classes=43):
@@ -90,7 +96,8 @@ class CNN(nn.Module):
 
 #HERE ONE HAS TO SELECT ONE OF THE MODELS TO RUN THE SIMULATION
 #model = Vgg16().to(device)
-model = CNN().to(device)
+model = CNN().cuda(device)
+
 
 optimizer = optim.SGD(model.parameters(), lr, momentum)
 loss_Vector = list();
