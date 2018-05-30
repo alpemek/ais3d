@@ -1,9 +1,4 @@
-"""VOC Dataset Classes
-
-Original author: Francisco Massa
-https://github.com/fmassa/vision/blob/voc_dataset/torchvision/datasets/voc.py
-
-Updated by: Ellis Brown, Max deGroot
+"""THIS CODE IS UNDER DEVELOPMENT. EVERYTHING CAN BE WRONG
 """
 from .config import HOME
 import os.path as osp
