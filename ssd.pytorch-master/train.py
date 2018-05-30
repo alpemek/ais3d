@@ -50,6 +50,12 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
 #This next line one can allow the visualization via Visdom. Results should be available on http://localhost:8097/
+
+# First install Python server and client
+#pip install visdom
+# Start the server (probably in a screen or tmux)
+#python -m visdom.server
+
 parser.add_argument('--visdom', default=True, type=str2bool,
                     help='Use visdom for loss visualization')
 parser.add_argument('--save_folder', default='weights/',
@@ -70,6 +76,9 @@ else:
 if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
 
+if args.visdom:
+        import visdom
+        viz = visdom.Visdom()
 
 def train():
 
@@ -81,9 +90,7 @@ def train():
                                transform=SSDAugmentation(cfg['min_dim'],
                                                          MEANS))
 
-    if args.visdom:
-        import visdom
-        viz = visdom.Visdom()
+
 
     #building the ssd network. WHEN ONE DOES STEP BY STEP, THIS NEXT LINE CONSUMES A LOT OF TIME
     ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
