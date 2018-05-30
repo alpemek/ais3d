@@ -30,6 +30,7 @@ parser.add_argument('--dataset_root', default=VOC_ROOT,
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 #reducing the batch size reduces the memory usage. and u should reduce the learning rate also
+#this value was reduced. originally the batch size was 32
 parser.add_argument('--batch_size', default=16, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
