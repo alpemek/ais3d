@@ -24,7 +24,7 @@ KITTI_CLASSES = (  # always index 0
 KITTI_ROOT = osp.join("/home/dllab/kitti_object/data_object_image_2")
 
 
-class VOCAnnotationTransform(object):
+class KITTIAnnotationTransform(object):
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
     Initilized with a dictionary lookup of classnames to indexes
 
@@ -39,7 +39,7 @@ class VOCAnnotationTransform(object):
 
     def __init__(self, class_to_ind=None, keep_difficult=False):
         self.class_to_ind = class_to_ind or dict(
-            zip(VOC_CLASSES, range(len(VOC_CLASSES))))
+            zip(KITTI_CLASSES, range(len(KITTI_CLASSES))))
         self.keep_difficult = keep_difficult
 
     def __call__(self, target, width, height):
@@ -73,7 +73,7 @@ class VOCAnnotationTransform(object):
         return res  # [[xmin, ymin, xmax, ymax, label_ind], ... ]
 
 
-class VOCDetection(data.Dataset):
+class KITTIDetection(data.Dataset):
     """VOC Detection Dataset Object
 
     input is image, target is annotation
@@ -92,8 +92,8 @@ class VOCDetection(data.Dataset):
 
     def __init__(self, root,
                  image_sets=[('2007', 'trainval')],
-                 transform=None, target_transform=VOCAnnotationTransform(),
-                 dataset_name='VOC0712'):
+                 transform=None, target_transform=KITTIAnnotationTransform(),
+                 dataset_name='KITTI'):
         self.root = root
         self.image_set = image_sets
         self.transform = transform
@@ -103,7 +103,7 @@ class VOCDetection(data.Dataset):
         self._imgpath = osp.join('%s', 'JPEGImages', '%s.jpg')
         self.ids = list()
         for (year, name) in image_sets:
-            rootpath = osp.join(self.root, 'VOC' + year)
+            rootpath = osp.join(self.root, 'KITTI' + year)
             for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
                 self.ids.append((rootpath, line.strip()))
 
