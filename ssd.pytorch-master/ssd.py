@@ -1,10 +1,13 @@
 import torch
+import numpy
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from layers import *
 from data import voc, coco
 import os
+
+
 
 
 class SSD(nn.Module):
@@ -139,7 +142,10 @@ def vgg(cfg, i, batch_norm=False):
                 layers += [conv2d, nn.ReLU(inplace=True)]
             in_channels = v
     pool5 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+    print('pool5 is ', pool5.shape)
+
     conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=6, dilation=6)
+    #till here
     conv7 = nn.Conv2d(1024, 1024, kernel_size=1)
     layers += [pool5, conv6,
                nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
@@ -189,6 +195,7 @@ extras = {
     '300': [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256],
     '512': [],
 }
+#number of bouding boxes you get (in the last layers)
 mbox = {
     '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
     '512': [],
