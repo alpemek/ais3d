@@ -49,7 +49,8 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
-parser.add_argument('--visdom', default=False, type=str2bool,
+#This next line one can allow the visualization via Visdom. Results should be available on http://localhost:8097/
+parser.add_argument('--visdom', default=True, type=str2bool,
                     help='Use visdom for loss visualization')
 parser.add_argument('--save_folder', default='weights/',
                     help='Directory for saving checkpoint models')
@@ -84,7 +85,7 @@ def train():
         import visdom
         viz = visdom.Visdom()
 
-    #building the ssd network
+    #building the ssd network. WHEN ONE DOES STEP BY STEP, THIS NEXT LINE CONSUMES A LOT OF TIME
     ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
     net = ssd_net
 
