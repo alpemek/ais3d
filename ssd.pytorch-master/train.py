@@ -23,10 +23,11 @@ def str2bool(v):
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
 train_set = parser.add_mutually_exclusive_group()
-parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO'],
-                    type=str, help='VOC or COCO')
+parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO', 'KITTI'],
+                    type=str, help='VOC ,COCO or KITTI')
 parser.add_argument('--dataset_root', default=VOC_ROOT,
                     help='Dataset root directory path')
+#THIS IS THE ALREADY PRE TRAINED VGG 16 NETWORK
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 #reducing the batch size reduces the memory usage. and u should reduce the learning rate also
@@ -39,9 +40,10 @@ parser.add_argument('--start_iter', default=0, type=int,
                     help='Resume training at this iter')
 parser.add_argument('--num_workers', default=4, type=int,
                     help='Number of workers used in dataloading')
+#HERE CUDA IS FORCED TO BE THE STANDARD DEVICE
 parser.add_argument('--cuda', default=True, type=str2bool,
                     help='Use CUDA to train model')
-#this should be reduced according to the batch size
+#THIS LEARNING RATE SHOULD IDEALLY CHANGE WITH THE BATCH SIZE. SMALLER BATCH, SMALLER LEARNING RATE
 parser.add_argument('--lr', '--learning-rate', default=0.1e-3, type=float,
                     help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float,
@@ -50,7 +52,9 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
+
 #This next line one can allow the visualization via Visdom. Results should be available on http://localhost:8097/
+#Visdom can be turned on and off in the parser above
 
 # First install Python server and client
 #pip install visdom
@@ -63,10 +67,10 @@ parser.add_argument('--save_folder', default='weights/',
                     help='Directory for saving checkpoint models')
 args = parser.parse_args()
 
-
 if torch.cuda.is_available():
     if args.cuda:
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
+        print("CUDA device loaded successfully")
     if not args.cuda:
         print("WARNING: It looks like you have a CUDA device, but aren't " +
               "using CUDA.\nRun with --cuda for optimal training speed.")
@@ -78,23 +82,30 @@ if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
 
 if args.visdom:
+        print("Visdom is enabled. Install Python server with pip install visdom and start server python -m visdom.server")
+        print("Results should be available on http://localhost:8097/")
         import visdom
         viz = visdom.Visdom()
 
 def train():
 
+    #THIS LINE IS WHERE ONE SPECIFIES THE DATASET. VOC SHOULD BE CHANGED
     if args.dataset == 'VOC':
         #if args.dataset_root == COCO_ROOT:
         #    parser.error('Must specify dataset if specifying dataset_root')
         cfg = voc
+        print("Loading the dataset")
         dataset = VOCDetection(root=args.dataset_root,
                                transform=SSDAugmentation(cfg['min_dim'],
                                                          MEANS))
+        print("Dataset loaded")
 
 
 
     #building the ssd network. WHEN ONE DOES STEP BY STEP, THIS NEXT LINE CONSUMES A LOT OF TIME
+    print("Building the SSD Network. This make take a while. Go and grab a coffee at the pool machine...")
     ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
+    print("SSD Network was created")
     net = ssd_net
 
     if args.cuda:
@@ -145,16 +156,13 @@ def train():
         iter_plot = create_vis_plot('Iteration', 'Loss', vis_title, vis_legend)
         epoch_plot = create_vis_plot('Epoch', 'Loss', vis_title, vis_legend)
 
-    data_loader = data.DataLoader(dataset, args.batch_size,
-                                  num_workers=args.num_workers,
-                                  shuffle=True, collate_fn=detection_collate,
-                                  pin_memory=True)
+    data_loader = data.DataLoader(dataset, args.batch_size,num_workers=args.num_workers,shuffle=True, collate_fn=detection_collate,pin_memory=True)
+
     # create batch iterator
     batch_iterator = iter(data_loader)
     for iteration in range(args.start_iter, cfg['max_iter']):
         if args.visdom and iteration != 0 and (iteration % epoch_size == 0):
-            update_vis_plot(epoch, loc_loss, conf_loss, epoch_plot, None,
-                            'append', epoch_size)
+            update_vis_plot(epoch, loc_loss, conf_loss, epoch_plot, None,'append', epoch_size)
             # reset epoch loss counters
             loc_loss = 0
             conf_loss = 0
@@ -176,7 +184,7 @@ def train():
         # forward
         t0 = time.time()
         out = net(images)
-        # backprop
+        # BACKPROPAGATION LINE
         optimizer.zero_grad()
         loss_l, loss_c = criterion(out, targets)
         loss = loss_l + loss_c
@@ -188,12 +196,12 @@ def train():
 
         if iteration % 10 == 0:
             print('timer: %.4f sec.' % (t1 - t0))
-            print('iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data[0]) )
+            print('epoch '+ repr(epoch) + ' iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data[0]))
 
         if args.visdom:
-            update_vis_plot(iteration, loss_l.data[0], loss_c.data[0],
-                            iter_plot, epoch_plot, 'append')
+            update_vis_plot(iteration, loss_l.data[0], loss_c.data[0],iter_plot, epoch_plot, 'append')
 
+        #FOR A REASON, IT IS NOT COMING TO THIS LOOP. THERE IS AN ERROR BEFORE REACHING ITERATION 5000. THE FINAL NETWORK SHOULD BE SAVED ON WEIGHTS FOLDER
         if iteration != 0 and iteration % 5000 == 0:
             print('Saving state, iter:', iteration)
             torch.save(ssd_net.state_dict(), 'weights/ssd300_COCO_' +
@@ -237,23 +245,26 @@ def create_vis_plot(_xlabel, _ylabel, _title, _legend):
     )
 
 
-def update_vis_plot(iteration, loc, conf, window1, window2, update_type,
-                    epoch_size=1):
-    viz.line(
-        X=torch.ones((1, 3)).cpu() * iteration,
-        Y=torch.Tensor([loc, conf, loc + conf]).unsqueeze(0).cpu() / epoch_size,
-        win=window1,
-        update=update_type
-    )
+def update_vis_plot(iteration, loc, conf, window1, window2, update_type,epoch_size=1):
+    return
+
+    #COMMENTED THE LINES BELOW BECAUSE THERE WAS SOME ERROR RELATED WITH window2 line
+    #    viz.line(
+    #        X=torch.ones((1, 3)).cpu() * iteration,
+    #        Y=torch.Tensor([loc, conf, loc + conf]).unsqueeze(0).cpu() / epoch_size,
+    #        win=window1,
+    #        update=update_type
+    #    )
+
+
     # initialize epoch plot on first iteration
-    if iteration == 0:
-        viz.line(
-            X=torch.zeros((1, 3)).cpu(),
-            Y=torch.Tensor([loc, conf, loc + conf]).unsqueeze(0).cpu(),
-            win=window2,
-            update=True
-        )
+    #if iteration == 0:
+    #    viz.line(
+    #        X=torch.zeros((1, 3)).cpu(),
+    #        Y=torch.Tensor([loc, conf, loc + conf]).unsqueeze(0).cpu(),
+    #        win=window2,
+    #        update=True
+    #    )
 
-
-if __name__ == '__main__':
+if __name__=='__main__':
     train()
