@@ -32,13 +32,13 @@ parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 #reducing the batch size reduces the memory usage. and u should reduce the learning rate also
 #this value was reduced. originally the batch size was 32
-parser.add_argument('--batch_size', default=16, type=int,
+parser.add_argument('--batch_size', default=2, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--start_iter', default=0, type=int,
                     help='Resume training at this iter')
-parser.add_argument('--num_workers', default=4, type=int,
+parser.add_argument('--num_workers', default=0, type=int,
                     help='Number of workers used in dataloading')
 #HERE CUDA IS FORCED TO BE THE STANDARD DEVICE
 parser.add_argument('--cuda', default=True, type=str2bool,
@@ -61,7 +61,7 @@ parser.add_argument('--gamma', default=0.1, type=float,
 # Start the server (probably in a screen or tmux)
 #python -m visdom.server
 
-parser.add_argument('--visdom', default=True, type=str2bool,
+parser.add_argument('--visdom', default=False, type=str2bool,
                     help='Use visdom for loss visualization')
 parser.add_argument('--save_folder', default='weights/',
                     help='Directory for saving checkpoint models')
@@ -144,6 +144,7 @@ def train():
     print('Loading the dataset...')
 
     epoch_size = len(dataset) // args.batch_size
+    #print('epoch_size ' + str(epoch_size))
     print('Training SSD on:', dataset.name)
     print('Using the specified args:')
     print(args)
@@ -161,6 +162,7 @@ def train():
     # create batch iterator
     batch_iterator = iter(data_loader)
     for iteration in range(args.start_iter, cfg['max_iter']):
+        print(cfg['max_iter'])
         if args.visdom and iteration != 0 and (iteration % epoch_size == 0):
             update_vis_plot(epoch, loc_loss, conf_loss, epoch_plot, None,'append', epoch_size)
             # reset epoch loss counters
@@ -169,6 +171,7 @@ def train():
             epoch += 1
 
         if iteration in cfg['lr_steps']:
+            print('cfg[lr_steps]' + cfg['lr_steps'])
             step_index += 1
             adjust_learning_rate(optimizer, args.gamma, step_index)
 
