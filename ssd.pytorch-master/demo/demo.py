@@ -59,7 +59,7 @@ for img_id in range(40):
     scale = torch.Tensor(rgb_image.shape[1::-1]).repeat(2)
     for i in range(detections.size(1)):
         j = 0
-        while detections[0,i,j,0] >= 0.15:
+        while detections[0,i,j,0] >= 0.25:
             score = detections[0,i,j,0]
             label_name = labels[i-1]
             display_txt = '%s: %.2f'%(label_name, score)
