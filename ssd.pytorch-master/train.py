@@ -223,11 +223,11 @@ def train():
             if args.visdom:
                 update_vis_plot(iteration, loss_l.data[0], loss_c.data[0],iter_plot, epoch_plot, 'append')
 
-            #FOR A REASON, IT IS NOT COMING TO THIS LOOP. THERE IS AN ERROR BEFORE REACHING ITERATION 5000. THE FINAL NETWORK SHOULD BE SAVED ON WEIGHTS FOLDER
-            if (epoch) != 0 and ((epoch+1)*iter_datasets +iteration) % 5000 == 0:
-                print('Saving state, Total iter:', epoch*iteration)
+            #Saving the intermediate state
+            if (iteration) != 0 and ((epoch)*iter_datasets +iteration) % 5000 == 0:
+                print('Saving state, Total iter:', (epoch)*iter_datasets +iteration)
                 torch.save(ssd_net.state_dict(), 'weights/ssd300_KITTI_' +
-                           repr((epoch+1)*iteration) + '.pth')
+                           repr( (epoch)*iter_datasets +iteration ) + '.pth')
     #here the network is saved
     torch.save(ssd_net.state_dict(),
                args.save_folder + '' + args.dataset + '_' + repr(cfg['max_iter']) + '.pth')
