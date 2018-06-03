@@ -23,9 +23,9 @@ def str2bool(v):
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
 train_set = parser.add_mutually_exclusive_group()
-parser.add_argument('--dataset', default='VOC', choices=['VOC', 'COCO', 'KITTI'],
+parser.add_argument('--dataset', default='KITTI', choices=['VOC', 'COCO', 'KITTI'],
                     type=str, help='VOC ,COCO or KITTI')
-parser.add_argument('--dataset_root', default=VOC_ROOT,
+parser.add_argument('--dataset_root', default=KITTI_ROOT,  # default=VOC_ROOT KITTI_ROOT
                     help='Dataset root directory path')
 #THIS IS THE ALREADY PRE TRAINED VGG 16 NETWORK
 parser.add_argument('--basenet', default='vgg16_reducedfc.pth',
@@ -100,6 +100,15 @@ def train():
                                                          MEANS))
         print("Dataset loaded")
 
+    if args.dataset == 'KITTI':
+        #if args.dataset_root == COCO_ROOT:
+        #    parser.error('Must specify dataset if specifying dataset_root')
+        cfg = kitti
+        print("Loading the dataset")
+        dataset = KITTIDetection(root=args.dataset_root,
+                               transform=SSDAugmentation(cfg['min_dim'],
+                                                         MEANS))
+        print("Dataset loaded")
 
 
     #building the ssd network. WHEN ONE DOES STEP BY STEP, THIS NEXT LINE CONSUMES A LOT OF TIME
@@ -208,20 +217,20 @@ def train():
             conf_loss += loss_c.data[0]
 
             if iteration % 10 == 0:
-                print('timer: %.4f sec.' % (t1 - t0))
-                print('Epoch: {:} '.format(epoch+1)  +' iter ' + repr(iteration) + ' || Loss: %.4f ||' % (loss.data[0]))
+                #print('timer: %.4f sec.' % (t1 - t0))
+                print('Epoch: {:} /{:}'.format(epoch+1,epoch_size)  +' iter: {:}/{:} '.format(iteration,iter_datasets) + ' || Loss: %.4f ||' % (loss.data[0]))
 
             if args.visdom:
                 update_vis_plot(iteration, loss_l.data[0], loss_c.data[0],iter_plot, epoch_plot, 'append')
 
             #FOR A REASON, IT IS NOT COMING TO THIS LOOP. THERE IS AN ERROR BEFORE REACHING ITERATION 5000. THE FINAL NETWORK SHOULD BE SAVED ON WEIGHTS FOLDER
-            if iteration != 0 and iteration % 5000 == 0:
-                print('Saving state, iter:', iteration)
-                torch.save(ssd_net.state_dict(), 'weights/ssd300_COCO_' +
-                           repr(iteration) + '.pth')
+            if (epoch) != 0 and ((epoch+1)*iter_datasets +iteration) % 5000 == 0:
+                print('Saving state, Total iter:', epoch*iteration)
+                torch.save(ssd_net.state_dict(), 'weights/ssd300_KITTI_' +
+                           repr((epoch+1)*iteration) + '.pth')
     #here the network is saved
     torch.save(ssd_net.state_dict(),
-               args.save_folder + '' + args.dataset + '.pth')
+               args.save_folder + '' + args.dataset + '_' + repr(cfg['max_iter']) + '.pth')
     print('Network saved')
 
 def adjust_learning_rate(optimizer, gamma, step):

@@ -13,7 +13,7 @@ else:
     import xml.etree.ElementTree as ET
 
 KITTI_CLASSES = (  # always index 0
-    'bicycle', 'car', 'person')
+    'Cyclist', 'Car', 'Pedestrian')
 
 # note: if you used our download scripts, this should be right
 KITTI_ROOT = osp.join("/home/dllab/kitti_object/data_object_image_2")
@@ -35,7 +35,7 @@ class KITTIAnnotationTransform(object):
     def __init__(self, class_to_ind=None, keep_difficult=False):
         self.class_to_ind = class_to_ind or dict(
             zip(KITTI_CLASSES, range(len(KITTI_CLASSES))))
-        self.keep_difficult = keep_difficult
+       # self.keep_difficult = keep_difficult
 
     def __call__(self, target, width, height):
         """
@@ -46,21 +46,41 @@ class KITTIAnnotationTransform(object):
             a list containing lists of bounding boxes  [bbox coords, class name]
         """
         res = []
-        for obj in target.iter('object'):
-            difficult = int(obj.find('difficult').text) == 1
-            if not self.keep_difficult and difficult:
-                continue
-            name = obj.find('name').text.lower().strip()
-            bbox = obj.find('bndbox')
+        # Code Starts here
 
-            pts = ['xmin', 'ymin', 'xmax', 'ymax']
+
+
+
+        objects = [Object3d(line) for line in target]
+
+        for obj in objects:
+        #    difficult = 0 #int(obj.find('difficult').text) == 1
+        #    if not self.keep_difficult and difficult:
+        #        continue
+            name = obj.type
+            #bbox = obj.find('bndbox')
+
+            #pts = ['xmin', 'ymin', 'xmax', 'ymax']
             bndbox = []
-            for i, pt in enumerate(pts):
-                cur_pt = int(bbox.find(pt).text) - 1
-                # scale height or width
-                cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
-                bndbox.append(cur_pt)
-            label_idx = self.class_to_ind[name]
+
+            bndbox.append (obj.xmin / width)
+            bndbox.append (obj.ymin / height)
+            bndbox.append (obj.xmax / width)
+            bndbox.append (obj.ymax / height)
+
+        #    for i, pt in enumerate(pts):
+        #        #cur_pt = int(bbox.find(pt).text) - 1
+        #        cur_pt = self.box2d
+        #        # scale height or width
+        #        cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
+        #        bndbox.append(cur_pt)
+
+            try:
+                label_idx = self.class_to_ind[name]
+            except KeyError:
+                continue
+        #    label_idx = self.class_to_ind[name]
+
             bndbox.append(label_idx)
             res += [bndbox]  # [xmin, ymin, xmax, ymax, label_ind]
             # img_id = target.find('filename').text[:-4]
@@ -86,21 +106,23 @@ class KITTIDetection(data.Dataset):
     """
 
     def __init__(self, root,
-                 image_sets=[('2007', 'trainval')],
+                 #image_sets=[('2007', 'trainval')],
                  transform=None, target_transform=KITTIAnnotationTransform(),
                  dataset_name='KITTI'):
         self.root = root
-        self.image_set = image_sets
+        #self.image_set = image_sets
         self.transform = transform
         self.target_transform = target_transform
         self.name = dataset_name
-        self._annopath = osp.join('%s', 'Annotations', '%s.xml')
-        self._imgpath = osp.join('%s', 'JPEGImages', '%s.jpg')
+        images_dir = osp.join(KITTI_ROOT,"training", "image_{0}".format(2))
+        label_dir = osp.join(KITTI_ROOT,"training", "label_{0}".format(2))
+        self._annopath = label_dir #osp.join('%s', 'Annotations', '%s.xml')
+        self._imgpath = images_dir #osp.join('%s', 'JPEGImages', '%s.jpg')
         self.ids = list()
-        for (year, name) in image_sets:
-            rootpath = osp.join(self.root, 'KITTI' + year)
-            for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
-                self.ids.append((rootpath, line.strip()))
+        #for (year, name) in image_sets:
+        #    rootpath = osp.join(self.root, 'KITTI' + year)
+        #    for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
+         #       self.ids.append((rootpath, line.strip()))
 
     def __getitem__(self, index):
         im, gt, h, w = self.pull_item(index)
@@ -108,13 +130,17 @@ class KITTIDetection(data.Dataset):
         return im, gt
 
     def __len__(self):
-        return len(self.ids)
+        return 7434 #len(self.ids)
 
     def pull_item(self, index):
-        img_id = self.ids[index]
+        img_id = index #self.ids[index]
 
-        target = ET.parse(self._annopath % img_id).getroot()
-        img = cv2.imread(self._imgpath % img_id)
+        image_dir = "{}/{:06d}.png".format(self._imgpath,img_id);
+        label_filename = "{}/{:06d}.txt".format(self._annopath,img_id)
+        target = [line.rstrip() for line in open(label_filename)]
+
+        #target = ET.parse(self._annopath % img_id).getroot()
+        img = cv2.imread(image_dir)
         height, width, channels = img.shape
 
         if self.target_transform is not None:
@@ -141,8 +167,8 @@ class KITTIDetection(data.Dataset):
         Return:
             PIL img
         '''
-        img_id = self.ids[index]
-        return cv2.imread(self._imgpath % img_id, cv2.IMREAD_COLOR)
+        img_id = index# self.ids[index]
+        return cv2.imread("{}/{:06d}.png".format(self._imgpath,img_id), cv2.IMREAD_COLOR)
 
     def pull_anno(self, index):
         '''Returns the original annotation of image at index
@@ -156,7 +182,7 @@ class KITTIDetection(data.Dataset):
             list:  [img_id, [(label, bbox coords),...]]
                 eg: ('001718', [('dog', (96, 13, 438, 332))])
         '''
-        img_id = self.ids[index]
+        img_id = index #self.ids[index]
         anno = ET.parse(self._annopath % img_id).getroot()
         gt = self.target_transform(anno, 1, 1)
         return img_id[1], gt
@@ -173,3 +199,39 @@ class KITTIDetection(data.Dataset):
             tensorized version of img, squeezed
         '''
         return torch.Tensor(self.pull_image(index)).unsqueeze_(0)
+
+class Object3d(object):
+    ''' 3d object label '''
+    def __init__(self, label_file_line, data=None):
+        data = label_file_line.split(' ')
+        data[1:] = [float(x) for x in data[1:]]
+
+        # extract label, truncation, occlusion
+        self.type = data[0] # 'Car', 'Pedestrian', ...
+        self.truncation = data[1] # truncated pixel ratio [0..1]
+        self.occlusion = int(data[2]) # 0=visible, 1=partly occluded, 2=fully occluded, 3=unknown
+        self.alpha = data[3] # object observation angle [-pi..pi]
+
+        # extract 2d bounding box in 0-based coordinates
+        self.xmin = int(data[4]) # left
+        self.ymin = int(data[5]) # top
+        self.xmax = int(data[6]) # right
+        self.ymax = int(data[7]) # bottom
+        self.box2d = np.array([self.xmin,self.ymin,self.xmax,self.ymax])
+
+        # extract 3d bounding box information
+        self.h = data[8] # box height
+        self.w = data[9] # box width
+        self.l = data[10] # box length (in meters)
+        self.t = (data[11],data[12],data[13]) # location (x,y,z) in camera coord.
+        self.ry = data[14] # yaw angle (around Y-axis in camera coordinates) [-pi..pi]
+
+    def print_object(self):
+        print('Type, truncation, occlusion, alpha: %s, %d, %d, %f' % \
+            (self.type, self.truncation, self.occlusion, self.alpha))
+        print('2d bbox (x0,y0,x1,y1): %f, %f, %f, %f' % \
+            (self.xmin, self.ymin, self.xmax, self.ymax))
+        print('3d bbox h,w,l: %f, %f, %f' % \
+            (self.h, self.w, self.l))
+        print('3d bbox location, ry: (%f, %f, %f), %f' % \
+            (self.t[0],self.t[1],self.t[2],self.ry))

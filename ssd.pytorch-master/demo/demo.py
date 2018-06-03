@@ -15,16 +15,18 @@ if torch.cuda.is_available():
 
 from ssd import build_ssd
 
-net = build_ssd('test', 300, 21)    # initialize SSD
+net = build_ssd('test', 300, 4)    # initialize SSD
 #net.load_weights('../weights/ssd300_mAP_77.43_v2.pth')
-net.load_weights('../weights/VOC.pth')
+#net.load_weights('../weights/VOC.pth')
+net.load_weights('../weights/KITTI.pth')
 # image = cv2.imread('./data/example.jpg', cv2.IMREAD_COLOR)  # uncomment if dataset not downloaded
 from matplotlib import pyplot as plt
-from data import VOCDetection, VOC_ROOT, VOCAnnotationTransform
+from data import VOCDetection, VOC_ROOT, VOCAnnotationTransform, KITTIDetection, KITTI_ROOT, KITTIAnnotationTransform
 # here we specify year (07 or 12) and dataset ('test', 'val', 'train')
-testset = VOCDetection(VOC_ROOT, [('2007', 'val')], None, VOCAnnotationTransform())
+#testset = VOCDetection(VOC_ROOT, [('2007', 'val')], None, VOCAnnotationTransform()) #CHANGED
+testset = KITTIDetection(KITTI_ROOT, None, KITTIAnnotationTransform())
 
-for img_id in range(40):
+for img_id in range(10):
     image = testset.pull_image(img_id)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # View the sampled input image before transform
@@ -45,7 +47,7 @@ for img_id in range(40):
         xx = xx.cuda()
     y = net(xx)
 
-    from data import VOC_CLASSES as labels
+    from data import KITTI_CLASSES as labels
     top_k=10
 
     plt.figure(figsize=(10,10))
