@@ -42,17 +42,20 @@ def cv2_demo(net, transform):
     # start video stream thread, allow buffer to fill
     print("[INFO] starting threaded video stream...")
     #stream = WebcamVideoStream(src=0).start()  # default camera
-    stream = FileVideoStream('/home/emeka/Downloads/driving.avi').start()
+    stream = FileVideoStream('/home/emeka/Downloads/istanbul.avi').start()
     time.sleep(1.0)
     # start fps timer
     # loop over frames from the video file stream
     while True:
         # grab next frame
-        frame = stream.read()
-        key = cv2.waitKey(1) & 0xFF
+        for i in range(12):
+            frame = stream.read()
+            key = cv2.waitKey(1) & 0xFF
 
         # update FPS counter
-        fps.update()
+
+
+            fps.update()
         frame = predict(frame)
 
         # keybindings for display
@@ -77,7 +80,7 @@ if __name__ == '__main__':
 
     net = build_ssd('test', 300, 21)    # initialize SSD
     net.load_state_dict(torch.load(args.weights))
-    transform = BaseTransform(net.size, (104/256.0, 117/256.0, 123/256.0))
+    transform = BaseTransform(net.size, (104/2048.0, 117/2048.0, 123/2048.0))
 
     fps = FPS().start()
     cv2_demo(net.eval(), transform)
