@@ -7,9 +7,6 @@ from layers import *
 from data import voc, coco
 import os
 
-
-
-
 class SSD(nn.Module):
     """Single Shot Multibox Architecture
     The network is composed of a base VGG network followed by the
@@ -150,7 +147,6 @@ def vgg(cfg, i, batch_norm=False):
                nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
     return layers
 
-
 def add_extras(cfg, i, batch_norm=False):
     # Extra layers added to VGG for feature scaling
     layers = []
@@ -166,7 +162,6 @@ def add_extras(cfg, i, batch_norm=False):
             flag = not flag
         in_channels = v
     return layers
-
 
 def multibox(vgg, extra_layers, cfg, num_classes):
     loc_layers = []
@@ -199,7 +194,6 @@ mbox = {
     '300': [4, 6, 6, 6, 4, 4],  # number of boxes per feature map location
     '512': [],
 }
-
 
 def build_ssd(phase, size=300, num_classes=21):
     if phase != "test" and phase != "train":

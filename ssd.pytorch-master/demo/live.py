@@ -3,11 +3,11 @@ import torch
 from torch.autograd import Variable
 import cv2
 import time
-from imutils.video import FPS, WebcamVideoStream
+from imutils.video import FPS, WebcamVideoStream, FileVideoStream
 import argparse
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
-parser.add_argument('--weights', default='/home/chulekm/AutonomousDriving/ais3d/ssd.pytorch-master/weights/ssd_300_VOC0712.pth',
+parser.add_argument('--weights', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd_300_VOC0712.pth',
                     type=str, help='Trained state_dict file path')
 parser.add_argument('--cuda', default=False, type=bool,
                     help='Use cuda in live demo')
@@ -41,7 +41,8 @@ def cv2_demo(net, transform):
 
     # start video stream thread, allow buffer to fill
     print("[INFO] starting threaded video stream...")
-    stream = WebcamVideoStream(src=0).start()  # default camera
+    #stream = WebcamVideoStream(src=0).start()  # default camera
+    stream = FileVideoStream('/home/emeka/Downloads/driving.avi').start()
     time.sleep(1.0)
     # start fps timer
     # loop over frames from the video file stream
