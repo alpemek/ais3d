@@ -96,16 +96,21 @@ def train():
     ssd_net = build_ssd('train', cfg['min_dim'], cfg['num_classes'])
     print("SSD Network was created")
     net = ssd_net
+    iter_datasets = len(dataset) // args.batch_size
+    epoch_size = cfg['max_iter'] // iter_datasets
+
     if args.cuda:
         net = torch.nn.DataParallel(ssd_net)
         cudnn.benchmark = True
     if args.resume:
         print('Resuming training, loading {}...'.format(args.resume))
         ssd_net.load_weights(args.resume)
+        start_epoch = args.start_iter // iter_datasets
     else:
         vgg_weights = torch.load(args.save_folder + args.basenet)
         print('Loading base network...')
         ssd_net.vgg.load_state_dict(vgg_weights)
+        start_epoch = 0
     if args.cuda:
         net = net.cuda()
     if not args.resume:
@@ -128,7 +133,7 @@ def train():
     print('Loading the dataset...')
     print('Length of the dataset: {}'.format(len(dataset)))
 
-    epoch_size = len(dataset) // args.batch_size
+   # epoch_size = len(dataset) // args.batch_size
 
     #print('epoch_size ' + str(epoch_size))
     print('Training SSD on:', dataset.name)
@@ -140,11 +145,10 @@ def train():
     # create batch iterator
     #batch_iterator = iter(data_loader) #uncomment
     #ADDED
-    iter_datasets = len(dataset) // args.batch_size
+
     print('Number of Iterations per Epoch: {}'.format(iter_datasets))
-    epoch_size = cfg['max_iter'] // iter_datasets
-    print('Number of Epochs: {}'.format(epoch_size))
-    for epoch in range(0, epoch_size):
+    print('Number of Epochs Left: {}'.format(epoch_size-start_epoch))
+    for epoch in range(start_epoch, epoch_size):
         for iteration, (images, targets) in enumerate(data_loader):
             if iteration in cfg['lr_steps']:
                 print('cfg[lr_steps]' + cfg['lr_steps'])
