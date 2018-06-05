@@ -35,11 +35,11 @@ parser.add_argument('--batch_size', default=8, type=int,
 #parser.add_argument('--resume', default=None, type=str,
 #                    help='Checkpoint state_dict file to resume training from')
 #IF ONE DOESNT WANT TO RESUME, SET defaul=None
-parser.add_argument('--resume', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_70000.pth', type=str,
+parser.add_argument('--resume', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_75000.pth', type=str,
                     help='Checkpoint state_dict file to resume training from')
 #parser.add_argument('--start_iter', default=0, type=int,
 #                    help='Resume training at this iter')
-parser.add_argument('--start_iter', default=70000, type=int,
+parser.add_argument('--start_iter', default=75000, type=int,
                     help='Resume training at this iter')
 parser.add_argument('--num_workers', default=0, type=int,
                     help='Number of workers used in dataloading')
@@ -146,18 +146,10 @@ def train():
     print('Number of Epochs: {}'.format(epoch_size))
     for epoch in range(0, epoch_size):
         for iteration, (images, targets) in enumerate(data_loader):
-
-    #for iteration in range(args.start_iter, cfg['max_iter']): #uncomment
-        #print(cfg['max_iter']) # indentation point
-
             if iteration in cfg['lr_steps']:
                 print('cfg[lr_steps]' + cfg['lr_steps'])
                 step_index += 1
                 adjust_learning_rate(optimizer, args.gamma, step_index)
-
-            # load train data
-            #images, targets = next(batch_iterator) #uncomment
-
             if args.cuda:
                 images = Variable(images.cuda())
                 targets = [Variable(ann.cuda(), volatile=True) for ann in targets]
