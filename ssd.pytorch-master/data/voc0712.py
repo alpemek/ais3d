@@ -22,12 +22,8 @@ VOC_CLASSES = (  # always index 0
     'motorbike', 'person', 'pottedplant',
     'sheep', 'sofa', 'train', 'tvmonitor')
 
-
-
-
 # note: if you used our download scripts, this should be right
 VOC_ROOT = osp.join(HOME, "data/VOCdevkit/")
-
 
 class VOCAnnotationTransform(object):
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
@@ -76,7 +72,6 @@ class VOCAnnotationTransform(object):
             # img_id = target.find('filename').text[:-4]
 
         return res  # [[xmin, ymin, xmax, ymax, label_ind], ... ]
-
 
 class VOCDetection(data.Dataset):
     """VOC Detection Dataset Object
