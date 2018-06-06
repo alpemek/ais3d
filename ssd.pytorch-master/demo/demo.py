@@ -12,7 +12,7 @@ import numpy as np
 import cv2
 if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
-
+import time
 from ssd import build_ssd
 
 net = build_ssd('test', 300, 4)    # initialize SSD
@@ -42,12 +42,13 @@ for img_id in range(10):
     plt.imshow(x)
     #plt.show()
     x = torch.from_numpy(x).permute(2, 0, 1)
-
+    t = time.time()
     xx = Variable(x.unsqueeze(0))     # wrap tensor in Variable
     if torch.cuda.is_available():
         xx = xx.cuda()
     y = net(xx)
-
+    elapsed = time.time() - t
+    print ('Forward pass time: {}'.format(elapsed))
     from data import KITTI_CLASSES as labels
     top_k=10
 
