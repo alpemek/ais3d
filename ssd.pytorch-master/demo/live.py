@@ -28,6 +28,7 @@ def cv2_demo(net, transform):
         #x = torch.from_numpy(transform(frame)[0]).permute(2, 0, 1)
         x = torch.from_numpy(x).permute(2, 0, 1) #frame -> x
         x = Variable(x.unsqueeze(0))
+
         t = time.time()
         if torch.cuda.is_available():
             x = x.cuda()
@@ -69,7 +70,7 @@ def cv2_demo(net, transform):
             fps.update()
         t = time.time()
         if 1:#ind1 ==5:
-            frames = predict(frame)
+            frame = predict(frame)
             print ('Frame Size: {}'.format(frame.shape))
             elapsed = time.time() - t
             print (elapsed)
