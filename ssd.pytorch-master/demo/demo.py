@@ -31,15 +31,15 @@ for img_id in range(10):
     image = testset.pull_image(img_id)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # View the sampled input image before transform
-    plt.figure(figsize=(10,10))
-    plt.imshow(rgb_image)
+    #plt.figure(figsize=(10,10))
+    #plt.imshow(rgb_image)
     #plt.show()
 
     x = cv2.resize(image, (300, 300)).astype(np.float32)
     x -= (104.0, 117.0, 123.0)
     x = x.astype(np.float32)
     x = x[:, :, ::-1].copy()
-    plt.imshow(x)
+    #plt.imshow(x)
     #plt.show()
     x = torch.from_numpy(x).permute(2, 0, 1)
     t = time.time()
@@ -63,7 +63,7 @@ for img_id in range(10):
     scale = torch.Tensor(rgb_image.shape[1::-1]).repeat(2)
     for i in range(detections.size(1)):
         j = 0
-        while detections[0,i,j,0] >= 0.25:
+        while detections[0,i,j,0] >= 0.45:
             score = detections[0,i,j,0]
             label_name = labels[i-1]
             display_txt = '%s: %.2f'%(label_name, score)
