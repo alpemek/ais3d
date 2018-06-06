@@ -27,7 +27,7 @@ from data import VOCDetection, VOC_ROOT, VOCAnnotationTransform, KITTIDetection,
 #testset = VOCDetection(VOC_ROOT, [('2007', 'val')], None, VOCAnnotationTransform()) #CHANGED
 testset = KITTIDetection(KITTI_ROOT, None, KITTIAnnotationTransform())
 
-for img_id in range(10):
+for img_id in range(10,20):
     image = testset.pull_image(img_id)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # View the sampled input image before transform
@@ -36,14 +36,18 @@ for img_id in range(10):
     #plt.show()
 
     x = cv2.resize(image, (300, 300)).astype(np.float32)
+    #plt.imshow(x)
+    #plt.show()
     x -= (104.0, 117.0, 123.0)
     x = x.astype(np.float32)
     x = x[:, :, ::-1].copy()
-    #plt.imshow(x)
-    #plt.show()
+
+
+    print('Size of x: {}'.format(x.shape))
     x = torch.from_numpy(x).permute(2, 0, 1)
     t = time.time()
     xx = Variable(x.unsqueeze(0))     # wrap tensor in Variable
+    print ('XX Size: {}'.format(xx.shape))
     if torch.cuda.is_available():
         xx = xx.cuda()
     y = net(xx)
