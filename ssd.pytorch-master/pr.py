@@ -57,58 +57,93 @@ def bb_intersection_over_union(boxA, boxB):
     # area and dividing it by the sum of prediction + ground-truth
     # areas - the interesection area
     iou = interArea / float(boxAArea + boxBArea - interArea)
-
+    if iou < 0:
+        iou = 0;
     # return the intersection over union value
     return iou
 
 
 def test_net(save_folder, net, cuda, testset, transform, thresh):
     # dump predictions and assoc. ground truth to text file for now
-    filename = save_folder+'test1.txt'
-    num_images = len(testset)
-    for i in range(num_images):
-        print('Testing image {:d}/{:d}....'.format(i+1, num_images))
-        img = testset.pull_image(i)
-        img_id, annotation = testset.pull_anno(i)
-        x = torch.from_numpy(transform(img)[0]).permute(2, 0, 1)
-        x = Variable(x.unsqueeze(0))
+    #filename = save_folder+'test1.txt'
+    lower_limit = 0.0000;
+    pre_car = []
+    pre_ped = []
+    pre_cyc = []
+    rec_car = []
+    rec_ped = []
+    rec_cyc = []
+    for ind in range(40):
+        num_images = len(testset)
+        #we zero tp,fp, fn
+        tp_car = 0
+        tp_ped = 0
+        tp_cyc = 0
+        fp_car = 0
+        fp_ped = 0
+        fp_cyc = 0
+        fn_car = 0
+        fn_ped = 0
+        fn_cyc = 0
 
-        with open(filename, mode='a') as f:
-            f.write('\nGROUND TRUTH FOR: '+img_id+'\n')
-            for box in annotation:
-                f.write('label: '+' || '.join(str(b) for b in box)+'\n')
-                #the line below is the actual class from the original image
-                print(box[4])
-                print(bb_intersection_over_union((box[0], box[1]), (box[2], box[3])))
-        if cuda:
-            x = x.cuda()
+        for i in range(num_images):
+            print('Testing image {:d}/{:d}....'.format(i+1, num_images))
+            img = testset.pull_image(i)
+            img_id, annotation = testset.pull_anno(i)
+            x = torch.from_numpy(transform(img)[0]).permute(2, 0, 1)
+            x = Variable(x.unsqueeze(0))
 
-        y = net(x)      # forward pass
-        detections = y.data
-        # scale each detection back up to the image
-        scale = torch.Tensor([img.shape[1], img.shape[0],
-                             img.shape[1], img.shape[0]])
-        pred_num = 0
-        for i in range(detections.size(1)):
-            j = 0
-            lower_limit = 0.0000;
-            for i in range(40):
-                while lower_limit >= detections[0, i, j, 0] > lower_limit+0.025:
-                    if pred_num == 0:
-                        with open(filename, mode='a') as f:
-                            f.write('PREDICTIONS: '+'\n')
+            #with open(filename, mode='a') as f:
+                #f.write('\nGROUND TRUTH FOR: '+img_id+'\n')
+                #for box in annotation:
+                    #f.write('label: '+' || '.join(str(b) for b in box)+'\n')
+                    #the line below is the actual class from the original image
+                    #print(box[4])
+            if cuda:
+                x = x.cuda()
+
+            y = net(x)      # forward pass
+            detections = y.data
+            # scale each detection back up to the image
+            scale = torch.Tensor([img.shape[1], img.shape[0],
+                                 img.shape[1], img.shape[0]])
+            pred_num = 0
+            for i in range(detections.size(1)):
+                j = 0
+                #this line under is looping all the dections
+                while detections[0, i, j, 0] > lower_limit:
+                    #if pred_num == 0:
+                        #with open(filename, mode='a') as f:
+                            #f.write('PREDICTIONS: '+'\n')
                     score = detections[0, i, j, 0]
                     label_name = labelmap[i-1]
                     pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
                     coords = (pt[0], pt[1], pt[2], pt[3])
+                    print('prediction box is pt[0]={}, pt[1]={},, pt[2]={},, pt[3]={}, '.format(pt[0], pt[1], pt[2], pt[3]))
+                    #this line under is
+                    for box in annotation:
+                        #the line below is the actual class from the original image
+                        print('class number is ' + str(box[4]))
+                        print([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
+                        if i == box[4]:
+                            print(bb_intersection_over_union([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]]))
+
                     pred_num += 1
-                    with open(filename, mode='a') as f:
-                        f.write(str(pred_num)+' label: '+label_name+' score: ' +
-                                str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
-                        #the line below is the prediction
-                        print(label_name)
+                    #with open(filename, mode='a') as f:
+                    #    f.write(str(pred_num)+' label: '+label_name+' score: ' +
+                    #            str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
+                    #    #the line below is the prediction
+                    #    print(label_name)
                     j += 1
-                lower_limit = lower_limit+0.025
+
+        #here we have to compute the 3 vectors.. by using append in the end
+        pre_car.append(tp_car/(tp_car+fp_car))
+        pre_ped.append(tp_ped/(tp_ped+fp_ped))
+        pre_cyc.append(tp_cyc/(tp_cyc+fp_cyc))
+        rec_car.append(tp_car/(tp_car+fn_car))
+        rec_ped.append(tp_ped/(tp_ped+fn_ped))
+        rec_cyc.append(tp_cyc/(tp_cyc+fn_cyc))
+        lower_limit = lower_limit+0.025
 
 
 def test_kitti():
@@ -129,3 +164,4 @@ def test_kitti():
 
 if __name__ == '__main__':
     test_kitti()
+    #print(bb_intersection_over_union([0,0,10,10],[0,0,0,0]))
