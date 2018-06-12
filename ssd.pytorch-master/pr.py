@@ -12,6 +12,7 @@ from PIL import Image
 from data import VOCAnnotationTransform, KITTIAnnotationTransform, VOCDetection, KITTIDetection, BaseTransform, VOC_CLASSES, KITTI_CLASSES
 import torch.utils.data as data
 from ssd import build_ssd
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
 #parser.add_argument('--trained_model', default='weights/ssd_300_VOC0712.pth',
@@ -66,13 +67,14 @@ def bb_intersection_over_union(boxA, boxB):
 def test_net(save_folder, net, cuda, testset, transform, thresh):
     # dump predictions and assoc. ground truth to text file for now
     #filename = save_folder+'test1.txt'
-    lower_limit = 0.0000;
+    lower_limit = 0.5;
     pre_car = []
     pre_ped = []
     pre_cyc = []
     rec_car = []
     rec_ped = []
     rec_cyc = []
+    thrS = [0.5,0.7,0.5]
     for ind in range(40):
         num_images = len(testset)
         #we zero tp,fp, fn
@@ -110,8 +112,23 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
             pred_num = 0
             for i in range(detections.size(1)):
                 j = 0
+                cycDum=0
+                carDum=0
+                pedDum=0
                 #this line under is looping all the dections
                 while detections[0, i, j, 0] > lower_limit:
+                    if (i-1) == 0: #cyc
+                        cycDum=1
+                        carDum=0
+                        pedDum=0
+                    if (i-1) == 1: #car
+                        cycDum=0
+                        carDum=1
+                        pedDum=0
+                    if (i-1) == 2: #ped
+                        cycDum=0
+                        carDum=0
+                        pedDum=1
                     #if pred_num == 0:
                         #with open(filename, mode='a') as f:
                             #f.write('PREDICTIONS: '+'\n')
@@ -119,15 +136,25 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                     label_name = labelmap[i-1]
                     pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
                     coords = (pt[0], pt[1], pt[2], pt[3])
-                    print('prediction box is pt[0]={}, pt[1]={},, pt[2]={},, pt[3]={}, '.format(pt[0], pt[1], pt[2], pt[3]))
+                    #print('prediction box is pt[0]={}, pt[1]={},, pt[2]={},, pt[3]={}, '.format(pt[0], pt[1], pt[2], pt[3]))
                     #this line under is
                     for box in annotation:
                         #the line below is the actual class from the original image
-                        print('class number is ' + str(box[4]))
-                        print([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
-                        if i == box[4]:
-                            print(bb_intersection_over_union([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]]))
-
+                     #   print('class number is ' + str(box[4]))
+                     #   print([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
+                        if (i-1) == box[4]:
+                            intres = bb_intersection_over_union([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
+                            if intres > thrS[i-1]:
+                    #            print(intres)
+                                if (i-1) == 0: #cyc
+                                    cycDum=0
+                                if (i-1) == 1: #car
+                                    carDum=0
+                                if (i-1) == 2: #ped
+                                    pedDum=0
+                    fp_car += carDum
+                    fp_ped += pedDum
+                    fp_cyc += cycDum
                     pred_num += 1
                     #with open(filename, mode='a') as f:
                     #    f.write(str(pred_num)+' label: '+label_name+' score: ' +
@@ -135,6 +162,61 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                     #    #the line below is the prediction
                     #    print(label_name)
                     j += 1
+            print(fp_car)
+            print(fp_ped)
+            print(fp_cyc)
+
+            for box in annotation:
+                cycDum=0
+                carDum=0
+                pedDum=0
+                if box[4] == 0: #cyc
+                    cycDum=1
+                    carDum=0
+                    pedDum=0
+                if box[4] == 1: #car
+                    cycDum=0
+                    carDum=1
+                    pedDum=0
+                if box[4] == 2: #ped
+                    cycDum=0
+                    carDum=0
+                    pedDum=1
+                for i in range(detections.size(1)):
+                    j = 0
+                    #this line under is looping all the dections
+                    while detections[0, i, j, 0] > lower_limit:
+
+                        score = detections[0, i, j, 0]
+                        label_name = labelmap[i-1]
+                        pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
+                        coords = (pt[0], pt[1], pt[2], pt[3])
+                        if (i-1) == box[4]:
+                            intres = bb_intersection_over_union([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
+                            print([box[0], box[1],box[2], box[3]],[pt[0], pt[1], pt[2], pt[3]])
+                            print(intres)
+                            if intres > thrS[i-1]:
+                                if (i-1) == 0: #cyc
+                                    tp_cyc+=1
+                                    cycDum=0
+                                    #break
+                                if (i-1) == 1: #car
+                                    tp_car+=1
+                                    carDum=0
+                                    #break
+                                if (i-1) == 2: #ped
+                                    tp_ped+=1
+                                    pedDum=0
+                                    #break
+
+                        j += 1
+                fn_car += carDum
+                fn_ped += pedDum
+                fn_cyc += cycDum
+            print('FN')
+            print(fn_car)
+            print(fn_ped)
+            print(fn_cyc)
 
         #here we have to compute the 3 vectors.. by using append in the end
         pre_car.append(tp_car/(tp_car+fp_car))
@@ -143,6 +225,16 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         rec_car.append(tp_car/(tp_car+fn_car))
         rec_ped.append(tp_ped/(tp_ped+fn_ped))
         rec_cyc.append(tp_cyc/(tp_cyc+fn_cyc))
+        plt.plot(rec_car, pre_car, 'car' )
+        plt.hold('on')
+        plt.plot(rec_ped, pre_ped, 'ped' )
+        plt.hold('on')
+        plt.plot(rec_cyc, pre_cyc, 'cyc' )
+        plt.hold('on')
+
+
+
+
         lower_limit = lower_limit+0.025
 
 
