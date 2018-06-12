@@ -67,7 +67,7 @@ def cv2_demo(net, transform):
     print("[INFO] starting threaded video stream...")
     #stream = WebcamVideoStream(src=0).start()  # default camera
     #this line makes stream from a file saved on harddrive
-    stream = FileVideoStream('/home/emeka/Downloads/Monaco.avi').start()
+    stream = FileVideoStream('/home/emeka/Downloads/driving/driving.avi').start()
     time.sleep(1.0)
     # start fps timer
     # loop over frames from the video file stream

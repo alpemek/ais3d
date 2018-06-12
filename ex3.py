@@ -98,7 +98,7 @@ def drawBox2D(img,obj):
   #cv2.rectangle(img,(384,0),(510,128),(0,255,0),30)
 
 
-img_idx=3; # Index of the image to be shown
+img_idx=0; # Index of the image to be shown
 image_dir = "{}/{:06d}.png".format(images_dir,img_idx);
 P = readCalibration(calib_dir,img_idx,cam);
 objects = readLabels(label_dir,img_idx);
@@ -108,6 +108,8 @@ objects = readLabels(label_dir,img_idx);
 image = cv2.imread(image_dir, 1)
 
 small = cv2.resize(image, (0,0), fx=1.0/factorx, fy=1.0/factory)
+small = cv2.resize(image, ( 400,400))
+print('size of image {}'.format(small.shape))
 #image = np.zeros((512,512,3), np.uint8)
 #cv2.imshow("test image", image)
 #cv2.rectangle(image,(384,0),(510,128),(0,255,0),30)

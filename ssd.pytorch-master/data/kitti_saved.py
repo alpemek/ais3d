@@ -106,11 +106,11 @@ class KITTIDetection(data.Dataset):
     """
 
     def __init__(self, root,
-                 image_sets=[('trainval')],
+                 #image_sets=[('2007', 'trainval')],
                  transform=None, target_transform=KITTIAnnotationTransform(),
                  dataset_name='KITTI'):
         self.root = root
-        self.image_set = image_sets
+        #self.image_set = image_sets
         self.transform = transform
         self.target_transform = target_transform
         self.name = dataset_name
@@ -119,10 +119,10 @@ class KITTIDetection(data.Dataset):
         self._annopath = label_dir #osp.join('%s', 'Annotations', '%s.xml')
         self._imgpath = images_dir #osp.join('%s', 'JPEGImages', '%s.jpg')
         self.ids = list()
-        for ( name) in image_sets:
-            rootpath = osp.join(self.root)
-            for line in open(osp.join(rootpath, name + '.txt')):
-                self.ids.append((line.strip()))
+        #for (year, name) in image_sets:
+        #    rootpath = osp.join(self.root, 'KITTI' + year)
+        #    for line in open(osp.join(rootpath, 'ImageSets', 'Main', name + '.txt')):
+         #       self.ids.append((rootpath, line.strip()))
 
     def __getitem__(self, index):
         im, gt, h, w = self.pull_item(index)
@@ -130,13 +130,13 @@ class KITTIDetection(data.Dataset):
         return im, gt
 
     def __len__(self):
-        return len(self.ids)
+        return 7434 #len(self.ids)
 
     def pull_item(self, index):
-        img_id = self.ids[index]
+        img_id = index #self.ids[index]
 
-        image_dir = "{}/{}.png".format(self._imgpath,img_id);
-        label_filename = "{}/{}.txt".format(self._annopath,img_id)
+        image_dir = "{}/{:06d}.png".format(self._imgpath,img_id);
+        label_filename = "{}/{:06d}.txt".format(self._annopath,img_id)
         target = [line.rstrip() for line in open(label_filename)]
 
         #target = ET.parse(self._annopath % img_id).getroot()
@@ -167,8 +167,8 @@ class KITTIDetection(data.Dataset):
         Return:
             PIL img
         '''
-        img_id = self.ids[index]
-        return cv2.imread("{}/{}.png".format(self._imgpath,img_id), cv2.IMREAD_COLOR)
+        img_id = index# self.ids[index]
+        return cv2.imread("{}/{:06d}.png".format(self._imgpath,img_id), cv2.IMREAD_COLOR)
 
     def pull_anno(self, index):
         '''Returns the original annotation of image at index
@@ -182,10 +182,10 @@ class KITTIDetection(data.Dataset):
             list:  [img_id, [(label, bbox coords),...]]
                 eg: ('001718', [('dog', (96, 13, 438, 332))])
         '''
-        img_id = self.ids[index]
+        img_id = index #self.ids[index]
         #anno = ET.parse(self._annopath % img_id).getroot()
         #image_dir = "{}/{:06d}.png".format(self._imgpath,img_id);
-        label_filename = "{}/{}.txt".format(self._annopath,img_id)
+        label_filename = "{}/{:06d}.txt".format(self._annopath,img_id)
         anno = [line.rstrip() for line in open(label_filename)]
         gt = self.target_transform(anno, 1, 1)
         return str(img_id), gt

@@ -18,16 +18,16 @@ from ssd import build_ssd
 net = build_ssd('test', 300, 4)    # initialize SSD
 #net.load_weights('../weights/ssd300_mAP_77.43_v2.pth')
 #net.load_weights('../weights/VOC.pth')
-net.load_weights('../weights/ssd300_KITTI_110000.pth')
+net.load_weights('../weights/trainval//ssd300_KITTI_110000.pth')
 #FOR TESTING WITH ONLY ONE IMAGE, WITHOUT THE DATASET FOLDER, COMMENT THE LIGHT ABOVE AND UNCOMMENT LINE BELOW. ALSO COMMENT THE LINE BELOW image = testset.pull_image(img_id)
 #image = cv2.imread('/home/emeka/Downloads/pp.jpeg', cv2.IMREAD_COLOR)  # uncomment if dataset not downloaded
 from matplotlib import pyplot as plt
 from data import VOCDetection, VOC_ROOT, VOCAnnotationTransform, KITTIDetection, KITTI_ROOT, KITTIAnnotationTransform
 # here we specify year (07 or 12) and dataset ('test', 'val', 'train')
 #testset = VOCDetection(VOC_ROOT, [('2007', 'val')], None, VOCAnnotationTransform()) #CHANGED
-testset = KITTIDetection(KITTI_ROOT, None, KITTIAnnotationTransform())
+testset = KITTIDetection(KITTI_ROOT,['val'], None, KITTIAnnotationTransform())
 
-for img_id in range(10,20):
+for img_id in range(60,150):
     image = testset.pull_image(img_id)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     # View the sampled input image before transform
@@ -37,7 +37,7 @@ for img_id in range(10,20):
 
     x = cv2.resize(image, (300, 300)).astype(np.float32)
     #plt.imshow(x)
-    #plt.show()
+   # plt.show()
     x -= (104.0, 117.0, 123.0)
     x = x.astype(np.float32)
     x = x[:, :, ::-1].copy()

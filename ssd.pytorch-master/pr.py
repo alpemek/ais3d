@@ -65,21 +65,24 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         pred_num = 0
         for i in range(detections.size(1)):
             j = 0
-            while detections[0, i, j, 0] >= 0.6:
-                if pred_num == 0:
+            lower_limit = 0.0000;
+            for i in range(40)
+                while lower_limit >= detections[0, i, j, 0] > lower_limit+0.025:
+                    if pred_num == 0:
+                        with open(filename, mode='a') as f:
+                            f.write('PREDICTIONS: '+'\n')
+                    score = detections[0, i, j, 0]
+                    label_name = labelmap[i-1]
+                    pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
+                    coords = (pt[0], pt[1], pt[2], pt[3])
+                    pred_num += 1
                     with open(filename, mode='a') as f:
-                        f.write('PREDICTIONS: '+'\n')
-                score = detections[0, i, j, 0]
-                label_name = labelmap[i-1]
-                pt = (detections[0, i, j, 1:]*scale).cpu().numpy()
-                coords = (pt[0], pt[1], pt[2], pt[3])
-                pred_num += 1
-                with open(filename, mode='a') as f:
-                    f.write(str(pred_num)+' label: '+label_name+' score: ' +
-                            str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
-                    #the line below is the prediction
-                    print(label_name)
-                j += 1
+                        f.write(str(pred_num)+' label: '+label_name+' score: ' +
+                                str(score) + ' '+' || '.join(str(c) for c in coords) + '\n')
+                        #the line below is the prediction
+                        print(label_name)
+                    j += 1
+                lower_limit = lower_limit+0.025
 
 
 def test_kitti():

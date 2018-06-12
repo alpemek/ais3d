@@ -35,7 +35,7 @@ parser.add_argument('--batch_size', default=8, type=int,
 #parser.add_argument('--resume', default=None, type=str,
 #                    help='Checkpoint state_dict file to resume training from')
 #IF ONE DOESNT WANT TO RESUME, SET defaul=None
-parser.add_argument('--resume', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_75000.pth', type=str,
+parser.add_argument('--resume', default=None, type=str, #default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_75000.pth'
                     help='Checkpoint state_dict file to resume training from')
 #parser.add_argument('--start_iter', default=0, type=int,
 #                    help='Resume training at this iter')
@@ -87,7 +87,7 @@ def train():
     if args.dataset == 'KITTI':
         cfg = kitti
         print("Loading the dataset")
-        dataset = KITTIDetection(root=args.dataset_root,
+        dataset = KITTIDetection(root=args.dataset_root,image_sets=[('train')],
                                transform=SSDAugmentation(cfg['min_dim'],
                                                          MEANS))
         print("Dataset loaded")
@@ -180,7 +180,7 @@ def train():
             #Saving the intermediate state
             if (iteration) != 0 and ((epoch)*iter_datasets +iteration) % 5000 == 0:
                 print('Saving state, Total iter:', (epoch)*iter_datasets +iteration)
-                torch.save(ssd_net.state_dict(), 'weights/ssd300_KITTI_' +
+                torch.save(ssd_net.state_dict(), 'weights/ssd300_Resz_KITTI_' +
                            repr( (epoch)*iter_datasets +iteration ) + '.pth')
     #here the network is saved
     torch.save(ssd_net.state_dict(),
