@@ -37,6 +37,31 @@ if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
 
 
+def bb_intersection_over_union(boxA, boxB):
+    # determine the (x, y)-coordinates of the intersection rectangle
+
+    xA = max(boxA[0], boxB[0])
+    yA = max(boxA[1], boxB[1])
+    xB = min(boxA[2], boxB[2])
+    yB = min(boxA[3], boxB[3])
+
+    # compute the area of intersection rectangle
+    interArea = (xB - xA) * (yB - yA)
+
+    # compute the area of both the prediction and ground-truth
+    # rectangles
+    boxAArea = (boxA[2] - boxA[0]) * (boxA[3] - boxA[1])
+    boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+    # return the intersection over union value
+    return iou
+
+
 def test_net(save_folder, net, cuda, testset, transform, thresh):
     # dump predictions and assoc. ground truth to text file for now
     filename = save_folder+'test1.txt'
@@ -52,8 +77,9 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
             f.write('\nGROUND TRUTH FOR: '+img_id+'\n')
             for box in annotation:
                 f.write('label: '+' || '.join(str(b) for b in box)+'\n')
-                #the line below is the actual class
+                #the line below is the actual class from the original image
                 print(box[4])
+                print(bb_intersection_over_union((box[0], box[1]), (box[2], box[3])))
         if cuda:
             x = x.cuda()
 
@@ -66,7 +92,7 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
         for i in range(detections.size(1)):
             j = 0
             lower_limit = 0.0000;
-            for i in range(40)
+            for i in range(40):
                 while lower_limit >= detections[0, i, j, 0] > lower_limit+0.025:
                     if pred_num == 0:
                         with open(filename, mode='a') as f:

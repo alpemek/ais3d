@@ -39,7 +39,7 @@ parser.add_argument('--resume', default=None, type=str, #default='/home/emeka/Sc
                     help='Checkpoint state_dict file to resume training from')
 #parser.add_argument('--start_iter', default=0, type=int,
 #                    help='Resume training at this iter')
-parser.add_argument('--start_iter', default=75000, type=int,
+parser.add_argument('--start_iter', default=0, type=int,
                     help='Resume training at this iter')
 parser.add_argument('--num_workers', default=0, type=int,
                     help='Number of workers used in dataloading')
