@@ -12,7 +12,7 @@ if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
-parser.add_argument('--weights', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_5000.pth',
+parser.add_argument('--weights', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_100000.pth',
                     type=str, help='Trained state_dict file path')
 parser.add_argument('--cuda', default=True, type=bool,
                     help='Use cuda in live demo')
@@ -33,12 +33,12 @@ def cv2_demo(net, transform):
         #plt.show()
         #x -= (104.0, 117.0, 123.0)#
         x = x.astype(np.float32)#
-        x = x[:, :, ::-1].copy()#
+        x = x[:, :, ::-1].copy()
         #print('Size of x: {}'.format(x.shape))
         #x = torch.from_numpy(transform(frame)[0]).permute(2, 0, 1)
         x = torch.from_numpy(x).permute(2, 0, 1) #frame -> x
         xx = Variable(x.unsqueeze(0))
-        print ('XX Size: {}'.format(xx.shape))
+       # print ('XX Size: {}'.format(xx.shape))
 
         if torch.cuda.is_available():
             xx = xx.cuda()
@@ -46,13 +46,13 @@ def cv2_demo(net, transform):
         y = net(xx)  # forward pass
 
         elapsed = time.time() - t
-        print ('Forward pass time: {}'.format(elapsed))
+        #print ('Forward pass time: {}'.format(elapsed))
         detections = y.data
         # scale each detection back up to the image
         scale = torch.Tensor([width, height, width, height])
         for i in range(detections.size(1)):
             j = 0
-            while detections[0, i, j, 0] >= 0.4:
+            while detections[0, i, j, 0] >= 0.7:
                 pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
                 cv2.rectangle(frame,
                               (int(pt[0]), int(pt[1])),
@@ -67,35 +67,42 @@ def cv2_demo(net, transform):
     print("[INFO] starting threaded video stream...")
     #stream = WebcamVideoStream(src=0).start()  # default camera
     #this line makes stream from a file saved on harddrive
-    stream = FileVideoStream('/home/emeka/Downloads/Monaco.avi').start()
-    time.sleep(1.0)
+#    stream = FileVideoStream('/home/emeka/Downloads/Monaco.avi').start()
+#    time.sleep(1.0)
     # start fps timer
     # loop over frames from the video file stream
+    img_id=1;
     while True:
         # grab next frame
         #this for loop was inserted in order to try to make the live in real time (which is currently not happening)
-        for i in range(25):
-            frame = stream.read()
+        frame = cv2.imread("{}/{:06d}.png".format('/home/emeka/Downloads/driving',img_id), cv2.IMREAD_COLOR)
+        #print("{}/{:06d}.jpeg".format('/home/emeka/Downloads/driving',img_id))
+        #cv2.imshow('frame', frame)
+        #cv2.waitKey(0)
+        img_id+=2
+#        for i in range(25):
+#            frame = stream.read()
 
-            key = cv2.waitKey(1) & 0xFF
+#            key = cv2.waitKey(1) & 0xFF
             # update FPS counter
-            fps.update()
+#            fps.update()
 
-        t = time.time()
+       # t = time.time()
         frame = predict(frame)
-        print ('Frame Size: {}'.format(frame.shape))
-        elapsed = time.time() - t
-        print (elapsed)
+        #print ('Frame Size: {}'.format(frame.shape))
+        #elapsed = time.time() - t
+        #print (elapsed)
         # keybindings for display
-        if key == ord('p'):  # pause
-            while True:
-                key2 = cv2.waitKey(1) or 0xff
-                cv2.imshow('frame', frame)
-                if key2 == ord('p'):  # resume
-                    break
+#        if key == ord('p'):  # pause
+#            while True:
+#                key2 = cv2.waitKey(1) or 0xff
+#                cv2.imshow('frame', frame)
+#                if key2 == ord('p'):  # resume
+#                    break
         cv2.imshow('frame', frame)
-        if key == 27:  # exit
-            break
+        cv2.waitKey(1)& 0xFF
+#        if key == 27:  # exit
+#            break
 
 if __name__ == '__main__':
     import sys
@@ -107,13 +114,13 @@ if __name__ == '__main__':
 
     net = build_ssd('test', 300, 4)    # initialize SSD
     #net.load_state_dict(torch.load(args.weights))
-    net.load_weights('../weights/ssd300_KITTI_110000.pth')
+    net.load_weights(args.weights)
     transform = BaseTransform(net.size, (104/2048.0, 117/2048.0, 123/2048.0))
     net.cuda()
-    fps = FPS().start()
+#    fps = FPS().start()
     cv2_demo(net, transform) #.eval()
     # stop the timer and display FPS information
-    fps.stop()
+#    fps.stop()
 
     print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
     print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
