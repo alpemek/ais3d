@@ -35,11 +35,11 @@ parser.add_argument('--batch_size', default=8, type=int,
 #parser.add_argument('--resume', default=None, type=str,
 #                    help='Checkpoint state_dict file to resume training from')
 #IF ONE DOESNT WANT TO RESUME, SET defaul=None
-parser.add_argument('--resume', default=None, type=str, #default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_75000.pth'
+parser.add_argument('--resume', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_65000.pth', type=str, #default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_KITTI_75000.pth'
                     help='Checkpoint state_dict file to resume training from')
 #parser.add_argument('--start_iter', default=0, type=int,
 #                    help='Resume training at this iter')
-parser.add_argument('--start_iter', default=0, type=int,
+parser.add_argument('--start_iter', default=65000, type=int,
                     help='Resume training at this iter')
 parser.add_argument('--num_workers', default=0, type=int,
                     help='Number of workers used in dataloading')

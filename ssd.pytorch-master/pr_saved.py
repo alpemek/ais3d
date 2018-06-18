@@ -17,7 +17,7 @@ import time
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
 #parser.add_argument('--trained_model', default='weights/ssd_300_VOC0712.pth',
 #                    type=str, help='Trained state_dict file path to open')
-parser.add_argument('--trained_model', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_105000.pth',
+parser.add_argument('--trained_model', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_80000.pth',
                     type=str, help='Trained state_dict file path to open')
 parser.add_argument('--save_folder', default='eval/', type=str,
                     help='Dir to save results')
@@ -75,12 +75,23 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
     rec_ped = []
     rec_cyc = []
     thrS = [0.5,0.7,0.5]
-    yArr = []
-    scaleArr = []
-    num_images = len(testset)
-    for i in range(num_images):
+    for ind in range(40):
+        print('Lower Limit: {:.3f}'.format(lower_limit))
+        num_images = len(testset)
+        #we zero tp,fp, fn
+        tp_car = 0
+        tp_ped = 0
+        tp_cyc = 0
+        fp_car = 0
+        fp_ped = 0
+        fp_cyc = 0
+        fn_car = 0
+        fn_ped = 0
+        fn_cyc = 0
+
+        for i in range(num_images):
             if (i+1) % 10 == 0:
-                print('Forwarding image {:d}/{:d}....'.format(i+1, num_images))
+                print('Testing image {:d}/{:d}....'.format(i+1, num_images))
             img = testset.pull_image(i)
             img_id, annotation = testset.pull_anno(i)
             x = torch.from_numpy(transform(img)[0]).permute(2, 0, 1)
@@ -94,39 +105,14 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                     #print(box[4])
             if cuda:
                 x = x.cuda()
+            t = time.time()
             y = net(x)      # forward pass
-            yArr.append(y)
+            elapsed = time.time() - t
+            print ('Forward pass time: {}'.format(elapsed))
+            detections = y.data
             # scale each detection back up to the image
-
-
-    for ind in range(40):
-        print('Lower Limit: {:.3f} - {:d}/{:d}'.format(lower_limit,ind+1,40))
-        #we zero tp,fp, fn
-        tp_car = 0
-        tp_ped = 0
-        tp_cyc = 0
-        fp_car = 0
-        fp_ped = 0
-        fp_cyc = 0
-        fn_car = 0
-        fn_ped = 0
-        fn_cyc = 0
-
-        for i in range(num_images):
-            if (i+1) % 100 == 0:
-                print('Evaluating image {:d}/{:d}....'.format(i+1, num_images))
-            img = testset.pull_image(i)
-            img_id, annotation = testset.pull_anno(i)
-            #with open(filename, mode='a') as f:
-                #f.write('\nGROUND TRUTH FOR: '+img_id+'\n')
-                #for box in annotation:
-                    #f.write('label: '+' || '.join(str(b) for b in box)+'\n')
-                    #the line below is the actual class from the original image
-                    #print(box[4])
-            detections = yArr[i].data
             scale = torch.Tensor([img.shape[1], img.shape[0],
                                  img.shape[1], img.shape[0]])
-
             pred_num = 0
             for i in range(detections.size(1)):
                 j = 0
@@ -231,7 +217,8 @@ def test_net(save_folder, net, cuda, testset, transform, thresh):
                 fn_car += carDum
                 fn_ped += pedDum
                 fn_cyc += cycDum
-
+            elapsed = time.time() - t
+            print ('Total time: {}'.format(elapsed))
             #print('FN')
             #print(fn_car)
             #print(fn_ped)

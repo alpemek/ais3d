@@ -12,7 +12,7 @@ if torch.cuda.is_available():
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
 parser = argparse.ArgumentParser(description='Single Shot MultiBox Detection')
-parser.add_argument('--weights', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_100000.pth',
+parser.add_argument('--weights', default='/home/emeka/Schreibtisch/AIS/ais3d/ssd.pytorch-master/weights/ssd300_Resz_KITTI_105000.pth',
                     type=str, help='Trained state_dict file path')
 parser.add_argument('--cuda', default=True, type=bool,
                     help='Use cuda in live demo')
@@ -52,7 +52,7 @@ def cv2_demo(net, transform):
         scale = torch.Tensor([width, height, width, height])
         for i in range(detections.size(1)):
             j = 0
-            while detections[0, i, j, 0] >= 0.7:
+            while detections[0, i, j, 0] >= 0.5:
                 pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
                 cv2.rectangle(frame,
                               (int(pt[0]), int(pt[1])),
