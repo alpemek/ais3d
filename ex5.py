@@ -1,9 +1,11 @@
 from __future__ import print_function
-
+import cv2
 import numpy as np
 import pcl
 import numpy as np
 import os.path
+import os
+
 
 #/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib
 def readCalibration(calib_dir,img_idx):
@@ -16,7 +18,6 @@ def readCalibration(calib_dir,img_idx):
       data[1:] = [float(x) for x in data[1:]]
       if(data[0] == 'Tr_velo_to_cam:'):
         #rot [0][0]data [1]
-        print('a')
         Tr_velo_to_cam = np.matrix([[data[1],data[2],data[3],data[4]],[data[5],data[6], data[7], data[8]],[data[9],data[10],data[11], data[12]],[0.0,0.0,0.0,1.0]])
       if(data[0] == 'R0_rect:'):
         R0_rect = np.matrix([[data[1],data[2],data[3],0.0],[data[4],data[5], data[6],0.0],[data[7],data[8],data[9],0.0],[0.0,0.0,0.0,1.0]])
@@ -60,22 +61,31 @@ class Object3d(object):
 
 if __name__ == "__main__":
     #LOADING THE CLOUD
-    cloud = pcl.load('/home/dllab/kitti_object/data_object_velodyne/pcl/3.pcd')
+    root_dir="/home/dllab/kitti_object/data_object_image_2"
+    pcd_dir="/home/dllab/kitti_object/data_object_velodyne/pcl"
+    data_set = "training"
+    images_dir = os.path.join(root_dir,data_set, "image_{0}".format(2));
+    label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2));
+    calib_dir = '/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib'
+
+    img_idx=310;
+    image_dir = "{}/{:06d}.png".format(images_dir,img_idx);
+
+    image = cv2.imread(image_dir, 1)
+    cv2.imshow("test image", image)
+    cv2.waitKey(1)& 0xFF
+    #cv2.destroyAllWindows()
+
+    cloud = pcl.load(os.path.join(pcd_dir,'{0}.pcd'.format(img_idx)))
     points_array = np.asarray(cloud)
     #print(a[2][1])
 
 
 
     #READING THE DATA FROM THE FILE
-    root_dir="/home/dllab/kitti_object/data_object_image_2"
-    data_set = "training"
-    img_idx=3;
-    images_dir = os.path.join(root_dir,data_set, "image_{0}".format(2));
-    label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2));
-    calib_dir = '/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib'
-    image_dir = "{}/{:06d}.png".format(images_dir,img_idx);
-    Tr_velo_to_cam, R0_rect, P2 = readCalibration(calib_dir,img_idx);
-    objects = readLabels(label_dir,img_idx);
+
+    Tr_velo_to_cam, R0_rect, P2 = readCalibration(calib_dir,img_idx)
+    objects = readLabels(label_dir,img_idx)
     filtered_points_array = []
     #DOT PRODUCT
     #Tr_velo_to_cam * y (4x4) (4x1)
@@ -84,14 +94,13 @@ if __name__ == "__main__":
         Tr_y = Tr_velo_to_cam*y
         if Tr_y[2] > 0:
             X = P2 * R0_rect * Tr_y
-            #print(X[1])
-            obj=objects[0];
-            if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
-                print(X)
-                filtered_points_array.append(points_array[ind])
-
-
-
+            #FOR LOOP FOR ALL  OBJECTS
+            for index in range(0,len(objects)):
+                obj=objects[index];
+                if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
+                    #print(X)
+                    filtered_points_array.append(points_array[ind])
+# check boxes from training, not the groundtruth and do it
        # print(Tr_y)
   #  for x in np.nditer(a):
    #     print(x)
@@ -100,8 +109,10 @@ if __name__ == "__main__":
 
     #outcloud = pcl.PointCloud(np.array([[1, 2, 3], [3, 4, 5],[6,7,8]], dtype=np.float32))
     outcloud = pcl.PointCloud(np.array(filtered_points_array, dtype=np.float32))
-    pcl.save(outcloud, "test.pcd")
-
+    #DONT CHANGE NAMES BECAUSE OF CPP CODE
+    pcl.save(outcloud, "./PCD_Files/segmented_{}.pcd".format(img_idx))
+    print('Cloud saved')
+    os.system("/home/emeka/Schreibtisch/AIS/deleteme/build/test_pcl {}".format(img_idx))
 
 
 
