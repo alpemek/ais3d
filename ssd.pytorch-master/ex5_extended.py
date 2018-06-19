@@ -73,69 +73,55 @@ if __name__ == "__main__":
     #label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2))
     detection_dir = '/home/emeka/Schreibtisch/AIS/ais3d/Detections'
     calib_dir = '/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib'
+    show_images=0
 
-    img_idx=180
-    img_real_id=testset.img_id_return(img_idx)
-    if img_real_id == '000000':
-        pcd_id = '0'
-    else:
-        pcd_id = img_real_id.lstrip('0') # without 0
-    #image_dir = "{}/{}.png".format(images_dir,img_id)
-    image = testset.pull_image(img_idx)
+    for img_idx in range(1,len(testset)):
+        img_real_id=testset.img_id_return(img_idx)
+        if img_real_id == '000000':
+            pcd_id = '0'
+        else:
+            pcd_id = img_real_id.lstrip('0') # without 0
 
-    #image = cv2.imread(image_dir, 1)
-    #cv2.imshow("test image", image)
-    #cv2.waitKey(1)& 0xFF
-    #cv2.destroyAllWindows()
 
-    cloud = pcl.load(os.path.join(pcd_dir,'{0}.pcd'.format(pcd_id)))
-    points_array = np.asarray(cloud)
-    #print(a[2][1])
+        cloud = pcl.load(os.path.join(pcd_dir,'{0}.pcd'.format(pcd_id)))
+        points_array = np.asarray(cloud)
 
 
 
-    #READING THE DATA FROM THE FILE
+        #READING THE DATA FROM THE FILE
 
-    Tr_velo_to_cam, R0_rect, P2 = readCalibration(calib_dir,img_real_id)
-    objects = readDetections(detection_dir,img_real_id)
-    filtered_points_array = []
-    #DOT PRODUCT
-    #Tr_velo_to_cam * y (4x4) (4x1)
+        Tr_velo_to_cam, R0_rect, P2 = readCalibration(calib_dir,img_real_id)
+        objects = readDetections(detection_dir,img_real_id)
+        filtered_points_array = []
 
 
-    for index in range(0,len(objects)):
-        obj=objects[index]
-        cv2.rectangle(image,(obj.xmin,obj.ymin),(obj.xmax,obj.ymax),(0,255,0),2)
-    cv2.imshow("test image", image)
-    cv2.waitKey(1)& 0xFF
-
-    for ind in range(0,points_array.shape[0]):
-        y = np.matrix([[points_array[ind][0]],[points_array[ind][1]],[points_array[ind][2]],[1.0]]);
-        Tr_y = Tr_velo_to_cam*y
-        if Tr_y[2] > 0:
-            X = P2 * R0_rect * Tr_y
-            #FOR LOOP FOR ALL  OBJECTS
+        if show_images == 1:
+            image = testset.pull_image(img_idx)
             for index in range(0,len(objects)):
                 obj=objects[index]
-                if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
-                    #print(X)
-                    filtered_points_array.append(points_array[ind])
+                cv2.rectangle(image,(obj.xmin,obj.ymin),(obj.xmax,obj.ymax),(0,255,0),2)
+            cv2.imshow("test image", image)
+            cv2.waitKey(1)& 0xFF
 
+        for ind in range(0,points_array.shape[0]):
+            y = np.matrix([[points_array[ind][0]],[points_array[ind][1]],[points_array[ind][2]],[1.0]]);
+            Tr_y = Tr_velo_to_cam*y
+            if Tr_y[2] > 0:
+                X = P2 * R0_rect * Tr_y
+                #FOR LOOP FOR ALL  OBJECTS
+                for index in range(0,len(objects)):
+                    obj=objects[index]
+                    if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
+                        filtered_points_array.append(points_array[ind])
 
-# check boxes from training, not the groundtruth and do it
-       # print(Tr_y)
-  #  for x in np.nditer(a):
-   #     print(x)
-        # 2d equal ret times ba ba times tr velo times y
-
-
-    #outcloud = pcl.PointCloud(np.array([[1, 2, 3], [3, 4, 5],[6,7,8]], dtype=np.float32))
-    outcloud = pcl.PointCloud(np.array(filtered_points_array, dtype=np.float32))
-    #DONT CHANGE NAMES BECAUSE OF CPP CODE
-    pcl.save(outcloud, "/home/emeka/Schreibtisch/AIS/ais3d/PCD_Files/segmented_{}.pcd".format(pcd_id))
-    print('Cloud saved')
-    os.system("/home/emeka/Schreibtisch/AIS/deleteme/build/test_pcl {}".format(pcd_id))
-
+        if(len(filtered_points_array) > 0):
+            outcloud = pcl.PointCloud(np.array(filtered_points_array, dtype=np.float32))
+            #DONT CHANGE NAMES BECAUSE OF CPP CODE
+            pcl.save(outcloud, "/home/emeka/Schreibtisch/AIS/ais3d/PCD_Files/segmented_{}.pcd".format(pcd_id))
+            print('Cloud saved')
+            #os.system("/home/emeka/Schreibtisch/AIS/deleteme/build/test_pcl {}".format(pcd_id))
+        if show_images == 1:
+            cv2.destroyAllWindows()
 
 
 
