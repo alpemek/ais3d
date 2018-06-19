@@ -6,10 +6,6 @@ import numpy as np
 import os.path
 import os
 from data import VOCDetection, VOC_ROOT, VOCAnnotationTransform, KITTIDetection, KITTI_ROOT, KITTIAnnotationTransform
-#from matplotlib import pyplot as plt
-# here we specify year (07 or 12) and dataset ('test', 'val', 'train')
-#testset = VOCDetection(VOC_ROOT, [('2007', 'val')], None, VOCAnnotationTransform()) #CHANGED
-
 
 #/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib
 def readCalibration(calib_dir,img_idx):
@@ -64,37 +60,42 @@ class Object3d(object):
     #self.ry = data[14] # yaw angle (around Y-axis in camera coordinates) [-pi..pi]
 
 if __name__ == "__main__":
+    # Load the Dataset
     testset = KITTIDetection(KITTI_ROOT,['train'], None, KITTIAnnotationTransform)
-    #LOADING THE CLOUD
+
+    # Necessary Directories
     root_dir="/home/dllab/kitti_object/data_object_image_2"
     pcd_dir="/home/dllab/kitti_object/data_object_velodyne/pcl"
     data_set = "training"
     images_dir = os.path.join(root_dir,data_set, "image_{0}".format(2))
-    #label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2))
     detection_dir = '/home/emeka/Schreibtisch/AIS/ais3d/Detections'
     calib_dir = '/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib'
-    show_images=0
 
+    # Assign 1 to visualize the images and PCD
+    show_images=1
+
+    # Iterate for every image
     for img_idx in range(1,len(testset)):
+        # Get the real image index (used in file names etc.)
         img_real_id=testset.img_id_return(img_idx)
+
+        #Delete the 0s before the number
         if img_real_id == '000000':
             pcd_id = '0'
         else:
             pcd_id = img_real_id.lstrip('0') # without 0
 
-
+        #Read Cloud & Convert it to array
         cloud = pcl.load(os.path.join(pcd_dir,'{0}.pcd'.format(pcd_id)))
         points_array = np.asarray(cloud)
 
-
-
-        #READING THE DATA FROM THE FILE
-
+        #Read Calibration Matrices & Detected objects
         Tr_velo_to_cam, R0_rect, P2 = readCalibration(calib_dir,img_real_id)
         objects = readDetections(detection_dir,img_real_id)
+
         filtered_points_array = []
 
-
+        # Show the boxes on the test image
         if show_images == 1:
             image = testset.pull_image(img_idx)
             for index in range(0,len(objects)):
@@ -103,6 +104,7 @@ if __name__ == "__main__":
             cv2.imshow("test image", image)
             cv2.waitKey(1)& 0xFF
 
+        # Check if the Point is inside of the Box
         for ind in range(0,points_array.shape[0]):
             y = np.matrix([[points_array[ind][0]],[points_array[ind][1]],[points_array[ind][2]],[1.0]]);
             Tr_y = Tr_velo_to_cam*y
@@ -114,12 +116,14 @@ if __name__ == "__main__":
                     if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
                         filtered_points_array.append(points_array[ind])
 
+        # Save the Points to a PCD file if the points exist
         if(len(filtered_points_array) > 0):
             outcloud = pcl.PointCloud(np.array(filtered_points_array, dtype=np.float32))
             #DONT CHANGE NAMES BECAUSE OF CPP CODE
             pcl.save(outcloud, "/home/emeka/Schreibtisch/AIS/ais3d/PCD_Files/segmented_{}.pcd".format(pcd_id))
             print('Cloud saved')
-            #os.system("/home/emeka/Schreibtisch/AIS/deleteme/build/test_pcl {}".format(pcd_id))
+            if show_images == 1:
+                os.system("/home/emeka/Schreibtisch/AIS/deleteme/build/test_pcl {}".format(pcd_id))
         if show_images == 1:
             cv2.destroyAllWindows()
 
