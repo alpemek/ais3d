@@ -132,6 +132,9 @@ class KITTIDetection(data.Dataset):
     def __len__(self):
         return len(self.ids)
 
+    def img_id_return(self, index):
+        return  self.ids[index]
+
     def pull_item(self, index):
         img_id = self.ids[index]
 
