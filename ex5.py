@@ -64,12 +64,12 @@ if __name__ == "__main__":
     root_dir="/home/dllab/kitti_object/data_object_image_2"
     pcd_dir="/home/dllab/kitti_object/data_object_velodyne/pcl"
     data_set = "training"
-    images_dir = os.path.join(root_dir,data_set, "image_{0}".format(2));
-    label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2));
+    images_dir = os.path.join(root_dir,data_set, "image_{0}".format(2))
+    label_dir = os.path.join(root_dir,data_set, "label_{0}".format(2))
     calib_dir = '/home/dllab/kitti_object/data_object_velodyne/data_object_calib/training/calib'
 
-    img_idx=310;
-    image_dir = "{}/{:06d}.png".format(images_dir,img_idx);
+    img_idx=590
+    image_dir = "{}/{:06d}.png".format(images_dir,img_idx)
 
     image = cv2.imread(image_dir, 1)
     cv2.imshow("test image", image)
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             X = P2 * R0_rect * Tr_y
             #FOR LOOP FOR ALL  OBJECTS
             for index in range(0,len(objects)):
-                obj=objects[index];
+                obj=objects[index]
                 if ( ( obj.xmin < X[0]/X[2] < obj.xmax ) and ( obj.ymin < X[1]/X[2] < obj.ymax ) ):
                     #print(X)
                     filtered_points_array.append(points_array[ind])

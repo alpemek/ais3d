@@ -97,6 +97,7 @@ class PointNetCls(nn.Module):
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, k)
+        #add 7 parameters instead of k...
         self.bn1 = nn.BatchNorm1d(512)
         self.bn2 = nn.BatchNorm1d(256)
         self.relu = nn.ReLU()
@@ -105,6 +106,7 @@ class PointNetCls(nn.Module):
         x = F.relu(self.bn1(self.fc1(x)))
         x = F.relu(self.bn2(self.fc2(x)))
         x = self.fc3(x)
+        #return softmax and smooth loss in the last line... one for classification another one for regression
         return F.log_softmax(x, dim=-1), trans
 
 class PointNetDenseCls(nn.Module):

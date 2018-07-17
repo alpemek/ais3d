@@ -23,7 +23,7 @@ import torch.nn.functional as F
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--batchSize', type=int, default=8, help='input batch size')
+parser.add_argument('--batchSize', type=int, default=4, help='input batch size')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
 parser.add_argument('--nepoch', type=int, default=25, help='number of epochs to train for')
 parser.add_argument('--outf', type=str, default='seg',  help='output folder')
@@ -57,7 +57,7 @@ except OSError:
 blue = lambda x:'\033[94m' + x + '\033[0m'
 
 
-classifier = PointNetDenseCls(k = num_classes)
+classifier = PointNetDenseCls(k = 7)
 
 if opt.model != '':
     classifier.load_state_dict(torch.load(opt.model))
@@ -86,17 +86,25 @@ for epoch in range(opt.nepoch):
         optimizer.zero_grad()
         pred, _ = classifier(points)
         pred = pred.view(-1, num_classes)
-        target = target.view(-1,1)[:,0] - 1
+        #target = target.view(-1,7)[:,0] - 1
+        target = target.view(-1,7)
         #print('4. Points{} , Target={} '.format(points.shape,target.shape))
         #print(pred.size(), target.size())
         #both vectors should be nx4 dimentions. target is one hot encoding with ground truth and prediction is nx4.
-        loss = F.nll_loss(pred, target)
+        #target.squeeze(1)
+        #pred.squeeze(1)
+        #loss = F.nll_loss(pred, target)
+       # torch.autograd.Variable([1]).float()
+        loss = F.smooth_l1_loss(pred, target)
+        #loss = F.mse_loss(pred, target)
+        print('Pred {}'.format(pred[0,:]))
+        print('Target {}'.format(target[0,:]))
         loss.backward()
         optimizer.step()
-        pred_choice = pred.data.max(1)[1]
-        correct = pred_choice.eq(target.data).cpu().sum()
-        print('[%d: %d/%d] train loss: %f accuracy: %f' %(epoch, i, num_batch, loss, correct/float(opt.batchSize * 2500)))
-        
+        #pred_choice = pred.data.max(1)[1]
+        #correct = pred_choice.eq(target.data).cpu().sum()
+       # print('[%d: %d/%d] train loss: %f accuracy: %f' %(epoch, i, num_batch, loss, correct/float(opt.batchSize * 2500)))
+        print('[%d: %d/%d] train loss: %f ' %(epoch, i, num_batch, loss))
         if i % 10 == 0:
             j, data = next(enumerate(testdataloader, 0))
             points, target = data
@@ -105,11 +113,13 @@ for epoch in range(opt.nepoch):
             points, target = points.cuda(), target.cuda()   
             pred, _ = classifier(points)
             pred = pred.view(-1, num_classes)
-            target = target.view(-1,1)[:,0] - 1
+            #target = target.view(-1,1)[:,0] - 1
+            target = target.view(-1,7)
             #last layer should be log softmax
-            loss = F.nll_loss(pred, target)
-            pred_choice = pred.data.max(1)[1]
-            correct = pred_choice.eq(target.data).cpu().sum()
-            print('[%d: %d/%d] %s loss: %f accuracy: %f' %(epoch, i, num_batch, blue('test'), loss, correct/float(opt.batchSize * 2500)))
-    
+            #loss = F.nll_loss(pred, target)
+            loss = F.smooth_l1_loss(pred, target)
+            #pred_choice = pred.data.max(1)[1]
+            #correct = pred_choice.eq(target.data).cpu().sum()
+            #print('[%d: %d/%d] %s loss: %f accuracy: %f' %(epoch, i, num_batch, blue('test'), loss, correct/float(opt.batchSize * 2500)))
+
     torch.save(classifier.state_dict(), '%s/seg_model_%d.pth' % (opt.outf, epoch))
