@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_2a1f5/fast"
+/usr/bin/make -f CMakeFiles/cmTC_2a1f5.dir/build.make CMakeFiles/cmTC_2a1f5.dir/build
+make[1]: Verzeichnis „/home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp“ wird betreten
+Building C object CMakeFiles/cmTC_2a1f5.dir/CheckSymbolExists.c.o
+/usr/bin/cc     -o CMakeFiles/cmTC_2a1f5.dir/CheckSymbolExists.c.o   -c /home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_2a1f5
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2a1f5.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTC_2a1f5.dir/CheckSymbolExists.c.o  -o cmTC_2a1f5 -rdynamic 
+CMakeFiles/cmTC_2a1f5.dir/CheckSymbolExists.c.o: In Funktion `main':
+CheckSymbolExists.c:(.text+0x16): Nicht definierter Verweis auf `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_2a1f5.dir/build.make:97: die Regel für Ziel „cmTC_2a1f5“ scheiterte
+make[1]: *** [cmTC_2a1f5] Fehler 1
+make[1]: Verzeichnis „/home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp“ wird verlassen
+Makefile:126: die Regel für Ziel „cmTC_2a1f5/fast“ scheiterte
+make: *** [cmTC_2a1f5/fast] Fehler 2
+
+File /home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_0879e/fast"
+/usr/bin/make -f CMakeFiles/cmTC_0879e.dir/build.make CMakeFiles/cmTC_0879e.dir/build
+make[1]: Verzeichnis „/home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp“ wird betreten
+Building C object CMakeFiles/cmTC_0879e.dir/CheckFunctionExists.c.o
+/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_0879e.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_0879e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0879e.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_0879e.dir/CheckFunctionExists.c.o  -o cmTC_0879e -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_0879e.dir/build.make:97: die Regel für Ziel „cmTC_0879e“ scheiterte
+make[1]: *** [cmTC_0879e] Fehler 1
+make[1]: Verzeichnis „/home/emeka/Schreibtisch/AIS/ais3d/Visualizers/showObjects/build/CMakeFiles/CMakeTmp“ wird verlassen
+Makefile:126: die Regel für Ziel „cmTC_0879e/fast“ scheiterte
+make: *** [cmTC_0879e/fast] Fehler 2
+
+
