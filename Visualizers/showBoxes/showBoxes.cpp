@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
   viewer->addPointCloud<pcl::PointXYZ>(cloud,single_color,"original");
   viewer->addPointCloud<pcl::PointXYZ>(cloud2,single_color2,"frustrum");
-  
+   
 
   for( int i = 0; i < num_obj; i++){	
       //std::cout << cloud_dum->points.size() << std::endl;
@@ -49,19 +49,21 @@ int main(int argc, char* argv[])
 	  std::string cube_id = "cube" + boost::to_string(i) ;
       std::string obj_id = "obj" + boost::to_string(i) ;
       
-      pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_dum, 0, 255, 0);
+      pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud_dum, 0, 255, 0); //cloud_dum, 0, 255, 0
 	  pcl::getMinMax3D (*cloud_dum, minPt, maxPt);
       
       viewer->addPointCloud<pcl::PointXYZ>(cloud_dum,single_color,obj_id);
-	  viewer->addCube (minPt.x, maxPt.x, minPt.y, maxPt.y,  minPt.z,  maxPt.z, 1.0, 1.0, 1.0, cube_id, 0);
+	  viewer->addCube (minPt.x, maxPt.x, minPt.y, maxPt.y,  minPt.z,  maxPt.z, 1, 1, 1, cube_id, 0);
 	  viewer->setRepresentationToWireframeForAllActors();
       segmented = "";
 }
+viewer->setBackgroundColor(0.4,0.4,0.4,0);
   while (!viewer->wasStopped ())
   {
     viewer->spinOnce (100);
     boost::this_thread::sleep (boost::posix_time::microseconds (100000));
   }
+  
   viewer->removeAllShapes();
   viewer->removeAllPointClouds();
 
