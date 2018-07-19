@@ -57,6 +57,7 @@ int main(int argc, char* argv[])
 	  //viewer->setRepresentationToWireframeForAllActors();
       segmented = "";
 }
+viewer->setBackgroundColor(0.4,0.4,0.4,0);
   while (!viewer->wasStopped ())
   {
     viewer->spinOnce (100);
