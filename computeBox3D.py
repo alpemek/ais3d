@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os.path
+
 def computeBox3D(object,P):
     # takes an object and a projection matrix (P) and projects the 3D
     # bounding box into the image plane.
